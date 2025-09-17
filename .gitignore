@@ -1,3 +1,6 @@
+/frontend/Diambars-Sublim-Public/.env
+*.env
+
 # Logs
 logs
 *.log
