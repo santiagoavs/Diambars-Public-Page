@@ -1,0 +1,200 @@
+.profile-page {
+  min-height: 120vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: 
+    radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
+    radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 85%, rgba(180, 100, 120, 0.6) 0%, transparent 45%),
+    radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, 0.7) 0%, transparent 35%),
+    radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
+    linear-gradient(135deg, 
+      #FFF6E2 0%,
+      #F5E7C6 20%,
+      #F0DFB8 40%,
+      #EBD7AA 60%,
+      #E6CF9C 80%,
+      #F2E4C1 100%
+    );
+  background-size: 
+    140% 140%, 
+    130% 130%, 
+    160% 160%, 
+    135% 135%, 
+    125% 125%, 
+    180% 180%, 
+    100% 100%;
+  animation: backgroundFlow 25s ease-in-out infinite alternate;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  z-index: 0;
+}
+
+.profile-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes backgroundFlow {
+  0% {
+    background-position: 
+      25% 15%,
+      85% 25%,
+      15% 70%,
+      70% 85%,
+      90% 60%,
+      45% 35%,
+      0% 0%;
+  }
+  50% {
+    background-position: 
+      30% 20%,
+      80% 30%,
+      20% 65%,
+      65% 80%,
+      85% 65%,
+      50% 40%,
+      0% 0%;
+  }
+  100% {
+    background-position: 
+      35% 25%,
+      75% 35%,
+      25% 60%,
+      60% 75%,
+      80% 70%,
+      55% 45%,
+      0% 0%;
+  }
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap; 
+  margin: 120px auto;
+  position: relative;
+  z-index: 1;
+}
+
+.left-column {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.profile-page .card:hover,
+.profile-page .payment-container:hover,
+.profile-page .shipping-container:hover {
+  z-index: 3;
+}
+
+body.modal-open .profile-page {
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+body.modal-open .profile-page * {
+  pointer-events: none;
+}
+
+.profile-page::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-page::-webkit-scrollbar-track {
+  background: rgba(255, 246, 226, 0.3);
+}
+
+.profile-page::-webkit-scrollbar-thumb {
+  background: rgba(63, 39, 36, 0.4);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.profile-page::-webkit-scrollbar-thumb:hover {
+  background: rgba(63, 39, 36, 0.6);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 899px) {
+  .profile-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 0 16px;
+  }
+  .profile-title {
+    font-size: 2.4rem;
+    margin-top: 110px;
+  }
+}
+
+@media (max-width: 599px) {
+  .profile-container {
+    gap: 14px;
+    padding: 0 14px;
+  }
+  .profile-title {
+    font-size: 2.2rem;
+    margin-top: 100px;
+  }
+}
+
+@media (max-width: 598px) {
+  .profile-container {
+    gap: 12px;
+    padding: 0 12px;
+  }
+  .profile-title {
+    font-size: 2rem;
+    margin-top: 80px;
+  }
+}
+
+@media (max-width: 475px) {
+  .profile-container {
+    gap: 10px;
+    padding: 0 10px;
+  }
+  .profile-title {
+    font-size: 1.8rem;
+    margin-top: 70px;
+  }
+}
+
+@media (max-width: 359px) {
+  .profile-container {
+    gap: 10px;
+    padding: 0 8px;
+  }
+  .profile-title {
+    font-size: 1.6rem;
+    margin-top: 60px;
+  }
+}

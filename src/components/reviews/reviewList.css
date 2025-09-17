@@ -1,0 +1,220 @@
+.review-list {
+  margin-top: 1.4rem;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+.review-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: 20px;
+  width: 700px;
+  padding: 2.5rem;
+  text-align: center;
+  font-size: 1rem;
+  color: #3F2724;
+  z-index: 2;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.review-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #fff6e20d, #fff6e259);
+  transform: translateY(10px) scale(0.95);
+  filter: blur(17px);
+  opacity: 0.8;
+}
+
+@keyframes fadeInUp {
+  from {
+      opacity: 0;
+      transform: translateY(20px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+.review-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.review-profile-pic {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-left: 20px;
+}
+
+.review-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.review-user-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 20px;
+}
+
+.review-username {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #3F2724;
+  margin-bottom: 5px;
+
+}
+.review-stars{
+  margin-left: 400px;
+  margin-right: 20px;
+}
+
+.review-text {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  text-align: left;
+  color: #3F2724;
+  padding: 0 1rem;
+}
+
+
+.no-reviews {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
+  .review-card {
+    width: 90%;
+    font-size: 0.95rem;
+  }
+}
+
+/* Teléfonos grandes */
+@media (max-width: 768px) {
+  .review-card {
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 1.2rem;
+  }
+}
+
+/* Teléfonos pequeños */
+@media (max-width: 480px) {
+  .review-card {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 1rem;
+  }
+}
+
+.review-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+@media (max-width: 1024px) {
+  .review-card {
+    width: 90%;
+    padding: 1.2rem;
+    font-size: 0.95rem;
+    
+  }
+
+  .review-author {
+    font-size: 1rem;
+  }
+
+  .review-date {
+    font-size: 0.85rem;
+  }
+
+  .review-rating {
+    font-size: 1.1rem;
+  }
+
+  .review-content {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .review-card {
+    width: 100%;
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .review-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .review-author {
+    font-size: 0.95rem;
+  }
+
+  .review-date {
+    font-size: 0.8rem;
+  }
+
+  .review-rating {
+    font-size: 1rem;
+  }
+
+  .review-content {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .review-card {
+    padding: 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .review-author {
+    font-size: 0.9rem;
+  }
+
+  .review-date {
+    font-size: 0.75rem;
+  }
+
+  .review-rating {
+    font-size: 0.95rem;
+  }
+
+  .review-content {
+    font-size: 0.85rem;
+  }
+}
