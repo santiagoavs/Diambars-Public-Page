@@ -704,14 +704,14 @@
 }
 
 /* ==================== MODAL FOOTER ==================== */
-.modal-footer {
+/* .modal-footer {
   padding: 16px 24px;
   background: #F9FAFB;
   border-top: 1px solid #E5E7EB;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
+} */
 
 /* ==================== LOADING STATES ==================== */
 .spinner {
