@@ -6,52 +6,49 @@ import { useUnifiedCanvasCentering } from '../../hooks/useUnifiedCanvasCentering
 import './KonvaDesignViewer.css';
 import Swal from 'sweetalert2';
 
-// Componente para manejar imágenes con carga asíncrona
-const KonvaImageElement = ({ imageUrl, image, ...props }) => {
+// Componente optimizado para manejar imágenes con carga asíncrona
+const KonvaImageElement = React.memo(({ imageUrl, image, ...props }) => {
+  // Extraer key de props para evitar warning de React
+  const { key, ...restProps } = props;
   const [imageState, setImageState] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const imageSource = imageUrl || image;
     
-    if (imageSource && !imageState) {
-      if (imageSource instanceof HTMLImageElement) {
-        setImageState(imageSource);
-        return;
-      }
-      
-      if (typeof imageSource === 'string') {
-        const img = new window.Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          setImageState(img);
-        };
-        img.onerror = (error) => {
-          console.error('Error cargando imagen:', error);
-        };
-        img.src = imageSource;
-      }
+    if (!imageSource) {
+      setImageState(null);
+      return;
     }
-  }, [imageUrl, image, imageState]);
-
-  if (!imageState && !image) {
-    return (
-      <Rect
-        {...props}
-        fill="#f0f0f0"
-        stroke="#ccc"
-        strokeWidth={1}
-        dash={[5, 5]}
-      />
-    );
-  }
+    
+    if (imageSource instanceof HTMLImageElement) {
+      setImageState(imageSource);
+      return;
+    }
+    
+    if (typeof imageSource === 'string' && !isLoading) {
+      setIsLoading(true);
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        setImageState(img);
+        setIsLoading(false);
+      };
+      img.onerror = (error) => {
+        console.error('Error cargando imagen:', error);
+        setIsLoading(false);
+      };
+      img.src = imageSource;
+    }
+  }, [imageUrl, image, isLoading]);
 
   const finalImage = imageState || image;
   
-  if (!(finalImage instanceof HTMLImageElement)) {
+  if (!finalImage || !(finalImage instanceof HTMLImageElement)) {
     return (
       <Rect
-        {...props}
-        fill="#f0f0f0"
+        {...restProps}
+        fill={isLoading ? "#e0e0e0" : "#f0f0f0"}
         stroke="#ccc"
         strokeWidth={1}
         dash={[5, 5]}
@@ -61,11 +58,11 @@ const KonvaImageElement = ({ imageUrl, image, ...props }) => {
 
   return (
     <Image
-      {...props}
+      {...restProps}
       image={finalImage}
     />
   );
-};
+});
 
 /**
  * Viewer de diseños usando Konva.js con CSS tradicional
@@ -87,6 +84,7 @@ const KonvaDesignViewer = ({
   const [productImage, setProductImage] = useState(null);
   const [customizationAreas, setCustomizationAreas] = useState([]);
   const [elements, setElements] = useState([]);
+  const [productMask, setProductMask] = useState(null);
 
   // Hook unificado para centrado del canvas
   const {
@@ -95,24 +93,100 @@ const KonvaDesignViewer = ({
     stageConfig
   } = useUnifiedCanvasCentering(productImage?.image, containerRef);
 
+  // ==================== CREACIÓN DE MÁSCARA DE PRODUCTO ====================
+
+  const createProductMask = useCallback((image, colorFilter) => {
+    if (!image || !colorFilter || colorFilter === '#ffffff') return null;
+    
+    try {
+      // Crear un canvas temporal para analizar la imagen
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = image.width;
+      canvas.height = image.height;
+      
+      // Dibujar la imagen en el canvas
+      ctx.drawImage(image, 0, 0);
+      
+      // Obtener los datos de píxeles
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      // Crear máscara: detectar píxeles que no sean fondo blanco
+      const maskData = new Uint8ClampedArray(data.length);
+      
+      // Convertir hex a RGB una sola vez
+      const hexToRgb = (hex) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        } : { r: 255, g: 255, b: 255 };
+      };
+      
+      const colorRgb = hexToRgb(colorFilter);
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+        
+        // Solo colorear píxeles que claramente son del producto
+        let isProduct = false;
+        
+        if (a < 20) {
+          // Píxeles completamente transparentes - NO colorear
+          isProduct = false;
+        } else if (r > 250 && g > 250 && b > 250) {
+          // Píxeles casi blancos puros - NO colorear (fondo)
+          isProduct = false;
+        } else if (r < 30 && g < 30 && b < 30) {
+          // Píxeles muy oscuros - NO colorear (sombras del fondo)
+          isProduct = false;
+        } else {
+          // Píxeles con color medio - SÍ colorear (producto)
+          isProduct = true;
+        }
+        
+        if (isProduct) {
+          // Producto: usar el color seleccionado
+          maskData[i] = colorRgb.r;     // R
+          maskData[i + 1] = colorRgb.g; // G
+          maskData[i + 2] = colorRgb.b; // B
+          maskData[i + 3] = 255;        // A
+        } else {
+          // Fondo: transparente
+          maskData[i] = 0;     // R
+          maskData[i + 1] = 0; // G
+          maskData[i + 2] = 0; // B
+          maskData[i + 3] = 0; // A
+        }
+      }
+      
+      // Crear nueva imagen con la máscara
+      const maskImageData = new ImageData(maskData, canvas.width, canvas.height);
+      ctx.putImageData(maskImageData, 0, 0);
+      
+      // Convertir canvas a imagen
+      const maskImage = new window.Image();
+      maskImage.src = canvas.toDataURL();
+      
+      return maskImage;
+    } catch (error) {
+      console.error('Error creando máscara de producto:', error);
+      return null;
+    }
+  }, []);
+
   // ==================== CARGA DE IMAGEN DEL PRODUCTO ====================
 
   const loadProductImage = useCallback(async () => {
-    console.log('🖼️ [KonvaDesignViewer] loadProductImage called with:', {
-      product,
-      hasProduct: !!product,
-      hasImages: !!product?.images,
-      hasMain: !!product?.images?.main,
-      hasImage: !!product?.image,
-      mainImage: product?.images?.main,
-      image: product?.image
-    });
-    
     // Handle both data structures: product.images.main (private admin) or product.image (public)
     const productImageUrl = product?.images?.main || product?.image;
     
     if (!productImageUrl) {
-      console.log('🖼️ [KonvaDesignViewer] No hay imagen principal del producto');
       return;
     }
 
@@ -136,13 +210,18 @@ const KonvaDesignViewer = ({
         };
 
         setProductImage(productImageData);
+        
+        // Crear máscara de color si es necesario
+        if (productColorFilter && productColorFilter !== '#ffffff') {
+          const mask = createProductMask(imageObj, productColorFilter);
+          setProductMask(mask);
+        } else {
+          setProductMask(null);
+        }
       };
 
       imageObj.onerror = (error) => {
-        console.error('Error cargando imagen del producto:', {
-          src: productImageUrl,
-          error
-        });
+        console.error('Error cargando imagen del producto:', error);
         setError('Error cargando imagen del producto');
       };
 
@@ -177,71 +256,20 @@ const KonvaDesignViewer = ({
   // ==================== CARGA DE ELEMENTOS DEL DISEÑO ====================
 
   const loadDesignElements = useCallback(() => {
-    console.log('🎨 [KonvaDesignViewer] loadDesignElements called with:', {
-      design,
-      hasDesign: !!design,
-      hasElements: !!design?.elements,
-      elementsLength: design?.elements?.length || 0,
-      elements: design?.elements
-    });
-    
     const designElements = design?.elements || [];
     
     if (designElements.length === 0) {
-      console.log('🎨 [KonvaDesignViewer] No hay elementos de diseño para cargar');
       setElements([]);
       return;
     }
-    
-    console.log('🎨 [KonvaDesignViewer] Cargando elementos del diseño:', designElements.length);
 
     const konvaElements = designElements.map((element, index) => {
       const { konvaAttrs, type, areaId } = element;
       
-      // ✅ VALIDACIÓN: Asegurar que konvaAttrs existe
+      // Validación: Asegurar que konvaAttrs existe
       if (!konvaAttrs) {
-        console.warn(`⚠️ [KonvaDesignViewer] Elemento ${index} sin konvaAttrs:`, element);
+        console.warn(`Elemento ${index} sin konvaAttrs:`, element);
         return null;
-      }
-      
-
-      console.log(`🔄 [KonvaDesignViewer] Procesando elemento ${index}:`, {
-        id: element._id,
-        type,
-        areaId,
-        konvaAttrs: {
-          x: konvaAttrs?.x,
-          y: konvaAttrs?.y,
-          width: konvaAttrs?.width,
-          height: konvaAttrs?.height,
-          fill: konvaAttrs?.fill,
-          stroke: konvaAttrs?.stroke,
-          strokeWidth: konvaAttrs?.strokeWidth,
-          imageUrl: konvaAttrs?.imageUrl,
-          text: konvaAttrs?.text,
-          points: konvaAttrs?.points,
-          pointsLength: konvaAttrs?.points?.length,
-          radius: konvaAttrs?.radius,
-          rotation: konvaAttrs?.rotation,
-          scaleX: konvaAttrs?.scaleX,
-          scaleY: konvaAttrs?.scaleY,
-          offsetX: konvaAttrs?.offsetX,
-          offsetY: konvaAttrs?.offsetY
-        }
-      });
-      
-      // ✅ DEBUGGING ESPECÍFICO: Log extra para shapes
-      if (type === 'shape' || type === 'hexagon' || type === 'customShape') {
-        console.log(`🔶 [KonvaDesignViewer] SHAPE DEBUG - ${type}:`, {
-          hasPoints: !!konvaAttrs.points,
-          pointsArray: konvaAttrs.points,
-          pointsCount: konvaAttrs.points?.length || 0,
-          x: konvaAttrs.x,
-          y: konvaAttrs.y,
-          fill: konvaAttrs.fill,
-          stroke: konvaAttrs.stroke
-        });
-        
       }
       
       const scaledX = konvaAttrs.x || 50;
@@ -356,28 +384,19 @@ const KonvaDesignViewer = ({
       return baseElement;
     }).filter(Boolean); // ✅ FILTRAR: Eliminar elementos null/undefined
 
-    console.log('🎨 [KonvaDesignViewer] Elementos procesados:', konvaElements.length);
     setElements(konvaElements);
-  }, [design, productImage]);
+  }, [design]);
 
   // ==================== RENDERIZADO DE ELEMENTOS ====================
 
+  // Memoizar elementos procesados para evitar re-renderizados innecesarios
+  const memoizedElements = useMemo(() => {
+    return elements.map(element => ({ ...element }));
+  }, [elements]);
+
   const renderElement = useCallback((element) => {
-    console.log('🎨 [KonvaDesignViewer] Renderizando elemento:', {
-      id: element.id,
-      elementType: element.elementType,
-      x: element.x,
-      y: element.y,
-      width: element.width,
-      height: element.height,
-      radius: element.radius,
-      points: element.points,
-      fill: element.fill,
-      stroke: element.stroke
-    });
 
     const commonProps = {
-      key: element.id,
       id: element.id,
       name: element.name,
       x: element.x,
@@ -396,6 +415,7 @@ const KonvaDesignViewer = ({
       case 'text':
         return (
           <Text
+            key={element.id}
             {...commonProps}
             text={element.text}
             fontSize={element.fontSize}
@@ -414,6 +434,7 @@ const KonvaDesignViewer = ({
       case 'rect':
         return (
           <Rect
+            key={element.id}
             {...commonProps}
             width={element.width}
             height={element.height}
@@ -427,6 +448,7 @@ const KonvaDesignViewer = ({
       case 'circle':
         return (
           <Circle
+            key={element.id}
             {...commonProps}
             radius={element.radius}
             fill={element.fill}
@@ -438,6 +460,7 @@ const KonvaDesignViewer = ({
       case 'image':
         return (
           <KonvaImageElement
+            key={element.id}
             {...commonProps}
             width={element.width}
             height={element.height}
@@ -447,36 +470,7 @@ const KonvaDesignViewer = ({
           />
         );
 
-      case 'triangle':
-        // ✅ CORRECCIÓN: Detectar tipo de renderizado para triangle
-        if (element._renderType === 'polygon' && element.sides && element.radius) {
-          return (
-            <RegularPolygon
-              {...commonProps}
-              sides={element.sides}
-              radius={element.radius}
-              fill={element.fill}
-              stroke={element.stroke}
-              strokeWidth={element.strokeWidth}
-            />
-          );
-        } else {
-          return (
-            <Line
-              {...commonProps}
-              points={element.points}
-              fill={element.fill}
-              stroke={element.stroke}
-              strokeWidth={element.strokeWidth}
-              closed={element.closed !== false}
-              lineCap="round"
-              lineJoin="round"
-              tension={element.tension || 0}
-            />
-          );
-        }
-
-      // ✅ MATCH PRIVATE ADMIN: Universal shape rendering for ALL shape types
+      // Universal shape rendering for ALL shape types
       case 'triangle':
       case 'pentagon':
       case 'hexagon':
@@ -490,20 +484,10 @@ const KonvaDesignViewer = ({
       case 'shape':
       case 'customShape':
       case 'path':
-        console.log(`🔶 [KonvaDesignViewer] Renderizando shape (${element.elementType}):`, {
-          originalType: element.originalType,
-          shapeType: element.shapeType,
-          points: element.points,
-          pointsLength: element.points?.length,
-          x: element.x,
-          y: element.y,
-          fill: element.fill,
-          stroke: element.stroke,
-          strokeWidth: element.strokeWidth
-        });
         
         return (
           <Line
+            key={element.id}
             {...commonProps}
             points={element.points}
             fill={element.fill}
@@ -519,6 +503,7 @@ const KonvaDesignViewer = ({
       case 'square':
         return (
           <Rect
+            key={element.id}
             {...commonProps}
             width={element.width}
             height={element.height}
@@ -532,6 +517,7 @@ const KonvaDesignViewer = ({
       case 'ellipse':
         return (
           <Circle
+            key={element.id}
             {...commonProps}
             radius={element.radius}
             fill={element.fill}
@@ -573,6 +559,16 @@ const KonvaDesignViewer = ({
 
     loadContent();
   }, [design?.id, product?.id, loadProductImage, loadCustomizationAreas, loadDesignElements]);
+
+  // Efecto para actualizar máscara cuando cambia el color del producto
+  useEffect(() => {
+    if (productImage?.image && productColorFilter && productColorFilter !== '#ffffff') {
+      const mask = createProductMask(productImage.image, productColorFilter);
+      setProductMask(mask);
+    } else {
+      setProductMask(null);
+    }
+  }, [productColorFilter, productImage?.image, createProductMask]);
 
   // ==================== DESCARGA ====================
 
@@ -619,7 +615,7 @@ const KonvaDesignViewer = ({
       {/* Canvas Container */}
       <div 
         ref={containerRef}
-        className="canvas-container"
+        className="canvas-container-viewer"
       >
         {isLoading && (
           <div className="loading-overlay">
@@ -664,89 +660,8 @@ const KonvaDesignViewer = ({
           <Layer ref={layerRef}>
             {/* Imagen del producto con máscara de color */}
             {productImage && productImage.image && (() => {
-              
-              // ✅ CORRECCIÓN: Aplicar máscara de color si existe
+              // Aplicar máscara de color si existe
               if (productColorFilter && productColorFilter !== '#ffffff') {
-                // Crear máscara automática para tintado selectivo
-                const createProductMask = () => {
-                  if (!productImage.image) return null;
-                  
-                  // Crear un canvas temporal para analizar la imagen
-                  const canvas = document.createElement('canvas');
-                  const ctx = canvas.getContext('2d');
-                  canvas.width = productImage.image.width;
-                  canvas.height = productImage.image.height;
-                  
-                  // Dibujar la imagen en el canvas
-                  ctx.drawImage(productImage.image, 0, 0);
-                  
-                  // Obtener los datos de píxeles
-                  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                  const data = imageData.data;
-                  
-                  // Crear máscara: detectar píxeles que no sean fondo blanco
-                  const maskData = new Uint8ClampedArray(data.length);
-                  
-                  for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i];
-                    const g = data[i + 1];
-                    const b = data[i + 2];
-                    const a = data[i + 3];
-                    
-                    // ✅ MUY ESTRICTO: Solo colorear píxeles que claramente son del producto
-                    let isProduct = false;
-                    
-                    if (a < 20) {
-                      // Píxeles completamente transparentes - NO colorear
-                      isProduct = false;
-                    } else if (r > 250 && g > 250 && b > 250) {
-                      // Píxeles casi blancos puros - NO colorear (fondo)
-                      isProduct = false;
-                    } else if (r < 30 && g < 30 && b < 30) {
-                      // Píxeles muy oscuros - NO colorear (sombras del fondo)
-                      isProduct = false;
-                    } else {
-                      // Píxeles con color medio - SÍ colorear (producto)
-                      isProduct = true;
-                    }
-                    
-                    if (isProduct) {
-                      // Producto: usar el color seleccionado
-                      const hexToRgb = (hex) => {
-                        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                        return result ? {
-                          r: parseInt(result[1], 16),
-                          g: parseInt(result[2], 16),
-                          b: parseInt(result[3], 16)
-                        } : { r: 255, g: 255, b: 255 };
-                      };
-                      
-                      const colorRgb = hexToRgb(productColorFilter);
-                      maskData[i] = colorRgb.r;     // R
-                      maskData[i + 1] = colorRgb.g; // G
-                      maskData[i + 2] = colorRgb.b; // B
-                      maskData[i + 3] = 255;        // A
-                    } else {
-                      // Fondo: transparente
-                      maskData[i] = 0;     // R
-                      maskData[i + 1] = 0; // G
-                      maskData[i + 2] = 0; // B
-                      maskData[i + 3] = 0; // A
-                    }
-                  }
-                  
-                  // Crear nueva imagen con la máscara
-                  const maskImageData = new ImageData(maskData, canvas.width, canvas.height);
-                  ctx.putImageData(maskImageData, 0, 0);
-                  
-                  // Convertir canvas a imagen
-                  const maskImage = new window.Image();
-                  maskImage.src = canvas.toDataURL();
-                  
-                  return maskImage;
-                };
-                
-                const maskImage = createProductMask();
                 
                 return (
                   <>
@@ -760,9 +675,9 @@ const KonvaDesignViewer = ({
                       listening={false}
                     />
                     {/* Máscara de color que solo afecta al producto */}
-                    {maskImage && (
+                    {productMask && (
                       <Image
-                        image={maskImage}
+                        image={productMask}
                         x={productImage.x}
                         y={productImage.y}
                         width={productImage.width}
@@ -801,51 +716,10 @@ const KonvaDesignViewer = ({
 
 
             {/* Elementos del diseño */}
-            {elements.map(renderElement)}
+            {memoizedElements.map(renderElement)}
           </Layer>
         </Stage>
       </div>
-
-      {/* Información del diseño */}
-      {(design?.elements?.length > 0 || product?.name) && (
-        <div className="design-info">
-          <div className="info-content">
-            <div className="design-details">
-              {product?.name && (
-                <p className="product-name">
-                  <strong>Producto:</strong> {product.name}
-                </p>
-              )}
-              {design?.elements && (
-                <p className="elements-count">
-                  <strong>Elementos:</strong> {design.elements.length} elemento(s)
-                </p>
-              )}
-              {design?.name && (
-                <p className="design-name">
-                  <strong>Diseño:</strong> {design.name}
-                </p>
-              )}
-              {design?.status && (
-                <p className="design-status">
-                  <strong>Estado:</strong> {design.status}
-                </p>
-              )}
-            </div>
-
-            {enableDownload && (
-              <button 
-                className="download-btn"
-                onClick={handleDownload}
-                disabled={isLoading || error}
-              >
-                <span className="download-icon">⬇️</span>
-                Descargar PNG
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

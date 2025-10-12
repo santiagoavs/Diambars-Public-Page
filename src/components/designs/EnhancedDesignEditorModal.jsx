@@ -1,5 +1,5 @@
 // Enhanced Design Editor Modal - Integrates Advanced Editor with Existing Modal
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import AdvancedDesignEditor from './advanced/AdvancedDesignEditor';
 import './EnhancedDesignEditorModal.css';
 
@@ -14,6 +14,21 @@ const EnhancedDesignEditorModal = ({
   console.log('EnhancedDesignEditorModal props:', { design, product });
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('saved');
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Save current overflow state
+      const originalOverflow = document.body.style.overflow;
+      // Prevent scrolling
+      document.body.style.overflow = 'hidden';
+      
+      // Cleanup: restore scroll when modal closes
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
 
   // Enhanced save handler that works with the advanced editor
   const handleAdvancedSave = useCallback(async (designData) => {

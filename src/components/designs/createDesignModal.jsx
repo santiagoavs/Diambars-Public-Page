@@ -465,7 +465,7 @@ const CreateDesignModal = ({
 
   return (
     <>
-      <div className="modal-overlay" onClick={handleClose}>
+      <div className={`create-modal-overlay ${showEditor ? 'hidden' : ''}`} onClick={handleClose}>
         <div className="create-design-modal" onClick={(e) => e.stopPropagation()}>
           {/* Header */}
           <div className="modal-header">

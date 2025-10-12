@@ -8,8 +8,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(41, 31, 23, 0.3);
-  backdrop-filter: blur(8px);
+  background: rgba(41, 31, 23, 0.6);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,7 +137,7 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-.modal-title h2 {
+.modal-title-response h2 {
   margin: 0 0 4px;
   font-size: 1.75rem;
   font-weight: 700;

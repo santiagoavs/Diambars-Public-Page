@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { X, Download, Edit, DollarSign } from 'lucide-react';
 import KonvaDesignViewer from './KonvaDesignViewer';
 import './designViewerModal.css';
 
@@ -27,275 +28,288 @@ const DesignViewerModal = ({
     }
   }, [designData, onQuoteResponse]);
 
+  // Bloquear el body scroll cuando el modal se abre
+  useEffect(() => {
+    if (isOpen) {
+      // Guardar el estado de overflow actual
+      const originalOverflow = document.body.style.overflow;
+      // Bloquear el scroll
+      document.body.style.overflow = 'hidden';
+      
+      // Cleanup: restaurar el scroll cuando el modal se cierra
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen || !designData?.design) return null;
 
   const design = designData.design;
   const order = designData.order;
 
+  const getStateColor = (status) => {
+    switch (status) {
+      case 'quoted':
+        return 'status-quoted';
+      case 'approved':
+        return 'status-approved';
+      case 'completed':
+        return 'status-completed';
+      case 'rejected':
+        return 'status-rejected';
+      case 'pending':
+        return 'status-pending';
+      case 'draft':
+      default:
+        return 'status-draft';
+    }
+  };
+
+  const getComplexityColor = (complexity) => {
+    switch (complexity) {
+      case 'low':
+        return 'complexity-low';
+      case 'medium':
+        return 'complexity-medium';
+      case 'high':
+        return 'complexity-high';
+      default:
+        return '';
+    }
+  };
+
+  const formatDate = (date) => {
+    if (!date) return '';
+    return new Intl.DateTimeFormat('es-ES', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(date));
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      draft: 'Borrador',
+      pending: 'Pendiente de cotización',
+      quoted: 'Cotizado',
+      approved: 'Aprobado',
+      completed: 'Completado',
+      rejected: 'Rechazado'
+    };
+    return labels[status] || 'Estado desconocido';
+  };
+
+  const getComplexityLabel = (complexity) => {
+    const labels = {
+      low: 'Baja',
+      medium: 'Media',
+      high: 'Alta'
+    };
+    return labels[complexity] || complexity;
+  };
+
+  const groupedElements = design.elements?.reduce(
+    (acc, element) => {
+      const type = element.type || 'other';
+      if (!acc[type]) acc[type] = [];
+      acc[type].push(element);
+      return acc;
+    },
+    {}
+  ) || {};
+
   return (
-    <div className="modal-overlay" onClick={handleClose}>
-      <div className="design-viewer-modal" onClick={(e) => e.stopPropagation()}>
+    <div className="dialog-overlay-viewer" onClick={handleClose}>
+      <div className="dialog-content-viewer" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="modal-header">
-          <div className="modal-title">
-            <span className="modal-icon">👁️</span>
-            <div>
-              <h2>{design.name}</h2>
-              <p>Vista completa del diseño</p>
-            </div>
+        <div className="dialog-header-viewer">
+          <div className="dialog-header-content-viewer">
+            <h2 className="dialog-title-viewer">Información del diseño</h2>
+            <button className="dialog-close-btn-viewer" onClick={handleClose}>
+              <X className="icon-sm-viewer" />
+              <span className="sr-only-viewer">Cerrar</span>
+            </button>
           </div>
-          <button onClick={handleClose} className="close-btn">
-            ✕
-          </button>
         </div>
 
-        {/* Content */}
-        <div className="modal-content">
-          {/* Konva Design Viewer */}
-          <div className="design-overview">
-            <div className="design-main-info">
-              <div className="design-visual konva-viewer-container">
-                <KonvaDesignViewer 
-                  design={design}
-                  product={design.product}
-                  enableDownload={true}
-                  onDownload={(dataURL) => {
-                    console.log('Design downloaded:', dataURL);
-                  }}
-                />
-              </div>
-
-              <div className="design-details">
-                <div className="detail-section">
-                  <h3>Información del Diseño</h3>
-                  <div className="detail-grid">
-                    <div className="detail-item">
-                      <label>Estado:</label>
-                      <span 
-                        className={`status-badge status-${design.status}`}
-                        style={{ color: design.status === 'quoted' ? '#3B82F6' : 
-                                      design.status === 'approved' ? '#10B981' : 
-                                      design.status === 'completed' ? '#059669' :
-                                      design.status === 'rejected' ? '#EF4444' : '#F59E0B' }}
-                      >
-                        {design.status === 'draft' ? 'Borrador' :
-                         design.status === 'pending' ? 'Pendiente de cotización' :
-                         design.status === 'quoted' ? 'Cotizado' :
-                         design.status === 'approved' ? 'Aprobado' :
-                         design.status === 'completed' ? 'Completado' :
-                         design.status === 'rejected' ? 'Rechazado' : 'Estado desconocido'}
-                      </span>
-                    </div>
-
-                    <div className="detail-item">
-                      <label>Creado:</label>
-                      <span>{design.createdAt?.toLocaleDateString()}</span>
-                    </div>
-
-                    {design.quotedAt && (
-                      <div className="detail-item">
-                        <label>Cotizado:</label>
-                        <span>{design.quotedAt.toLocaleDateString()}</span>
-                      </div>
-                    )}
-
-                    {design.price > 0 && (
-                      <div className="detail-item">
-                        <label>Precio:</label>
-                        <span className="price-value">{design.formattedPrice}</span>
-                      </div>
-                    )}
-
-                    {design.productionDays > 0 && (
-                      <div className="detail-item">
-                        <label>Tiempo de producción:</label>
-                        <span>{design.productionDays} día{design.productionDays !== 1 ? 's' : ''}</span>
-                      </div>
-                    )}
-
-                    <div className="detail-item">
-                      <label>Elementos:</label>
-                      <span>{design.elements?.length || 0} elemento{design.elements?.length !== 1 ? 's' : ''}</span>
-                    </div>
-
-                    {design.complexity && (
-                      <div className="detail-item">
-                        <label>Complejidad:</label>
-                        <span className={`complexity-${design.complexity}`}>
-                          {design.complexity === 'low' ? 'Baja' :
-                           design.complexity === 'medium' ? 'Media' :
-                           design.complexity === 'high' ? 'Alta' : design.complexity}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Información del producto */}
-                {design.product && (
-                  <div className="detail-section">
-                    <h3>Producto Base</h3>
-                    <div className="product-info">
-                      {design.product.image && (
-                        <img 
-                          src={design.product.image} 
-                          alt={design.product.name}
-                          className="product-thumbnail"
-                        />
-                      )}
-                      <div>
-                        <h4>{design.product.name}</h4>
-                        {design.product.customizationAreas?.length > 0 && (
-                          <p>{design.product.customizationAreas.length} área{design.product.customizationAreas.length !== 1 ? 's' : ''} de personalización</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+        {/* Body */}
+        <div className="dialog-body-viewer">
+          {/* Canvas Preview */}
+          <div className="section-viewer">
+            <h3 className="section-title-viewer">Vista previa</h3>
+            <div className="preview-container-viewer">
+              <KonvaDesignViewer 
+                design={design}
+                product={design.product}
+                enableDownload={true}
+                onDownload={(dataURL) => {
+                  console.log('Design downloaded:', dataURL);
+                }}
+              />
             </div>
           </div>
 
-          {/* Opciones del producto */}
-          {design.productOptions && design.productOptions.length > 0 && (
-            <div className="design-section">
-              <h3>Opciones del Producto</h3>
-              <div className="product-options">
-                {design.productOptions.map((option, index) => (
-                  <div key={index} className="option-item">
-                    <span className="option-name">{option.name}:</span>
-                    <span className="option-value">{option.value}</span>
-                    {option.additionalPrice > 0 && (
-                      <span className="option-price">+${option.additionalPrice}</span>
-                    )}
-                  </div>
-                ))}
+          {/* Design Information */}
+          <div className="section-viewer">
+            <h3 className="section-title-viewer">Detalles del diseño</h3>
+            <div className="info-grid-viewer">
+              <div className="info-item-viewer">
+                <p className="info-label-viewer">Estado</p>
+                <span className={`badge-viewer ${getStateColor(design.status)}`}>
+                  {getStatusLabel(design.status)}
+                </span>
               </div>
-            </div>
-          )}
-
-          {/* Color del producto */}
-          {design.productColorFilter && design.productColorFilter !== '#ffffff' && (
-            <div className="design-section">
-              <h3>Color del Producto</h3>
-              <div className="color-display">
-                <div 
-                  className="color-swatch"
-                  style={{ backgroundColor: design.productColorFilter }}
-                ></div>
-                <span>{design.productColorFilter}</span>
+              <div className="info-item-viewer">
+                <p className="info-label-viewer">Creado</p>
+                <p className="info-value-viewer">{formatDate(design.createdAt)}</p>
               </div>
-            </div>
-          )}
-
-          {/* Notas */}
-          {(design.clientNotes || design.adminNotes || design.rejectionReason) && (
-            <div className="design-section">
-              <h3>Notas y Comentarios</h3>
-              
-              {design.clientNotes && (
-                <div className="note-item client-notes">
-                  <h4>Notas del Cliente:</h4>
-                  <p>"{design.clientNotes}"</p>
-                </div>
-              )}
-              
-              {design.adminNotes && (
-                <div className="note-item admin-notes">
-                  <h4>Notas del Administrador:</h4>
-                  <p>"{design.adminNotes}"</p>
-                </div>
-              )}
-              
-              {design.rejectionReason && (
-                <div className="note-item rejection-reason">
-                  <h4>Motivo del Rechazo:</h4>
-                  <p>"{design.rejectionReason}"</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Información del pedido */}
-          {order && (
-            <div className="design-section">
-              <h3>Información del Pedido</h3>
-              <div className="order-info">
-                <div className="detail-item">
-                  <label>Número de Pedido:</label>
-                  <span className="order-number">{order.orderNumber}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Estado del Pedido:</label>
-                  <span className={`status-badge status-${order.status}`}>
-                    {order.status}
+              <div className="info-item-viewer">
+                <p className="info-label-viewer">Elementos</p>
+                <p className="info-value-viewer">
+                  {design.elements?.length || 0} {design.elements?.length === 1 ? 'item' : 'items'}
+                </p>
+              </div>
+              {design.complexity && (
+                <div className="info-item-viewer">
+                  <p className="info-label-viewer">Complejidad</p>
+                  <span className={`badge-viewer ${getComplexityColor(design.complexity)}`}>
+                    {getComplexityLabel(design.complexity)}
                   </span>
                 </div>
-                {order.estimatedReadyDate && (
-                  <div className="detail-item">
-                    <label>Fecha Estimada:</label>
-                    <span>{new Date(order.estimatedReadyDate).toLocaleDateString()}</span>
-                  </div>
-                )}
-              </div>
+              )}
+              {design.quotedAt && (
+                <div className="info-item-viewer">
+                  <p className="info-label-viewer">Cotizado</p>
+                  <p className="info-value-viewer">{formatDate(design.quotedAt)}</p>
+                </div>
+              )}
+              {design.price > 0 && (
+                <div className="info-item-viewer">
+                  <p className="info-label-viewer">Precio establecido</p>
+                  <p className="info-value-viewer price-highlight-viewer">{design.formattedPrice}</p>
+                </div>
+              )}
+              {design.productionDays > 0 && (
+                <div className="info-item-viewer">
+                  <p className="info-label-viewer">Tiempo de producción</p>
+                  <p className="info-value-viewer">
+                    {design.productionDays} día{design.productionDays !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
-          {/* Elementos del diseño */}
-          {design.elements && design.elements.length > 0 && (
-            <div className="design-section">
-              <h3>Elementos del Diseño</h3>
-              <div className="elements-list">
-                {design.elements.map((element, index) => (
-                  <div key={index} className="element-item">
-                    <div className="element-icon">
-                      {element.type === 'text' ? '📝' : 
-                       element.type === 'image' ? '🖼️' : '🎨'}
+          {/* Two Column Layout - Product Information and Design Elements */}
+          <div className="product-elements-columns-viewer">
+            {/* Left Column - Product Information */}
+            {design.product && (
+              <div className="section-viewer">
+                <h3 className="section-title-viewer">Información del producto</h3>
+                <div className="product-info-viewer">
+                  <div className="product-details-viewer">
+                    <div className="product-header-viewer">
+                      <p className="info-label-viewer">Producto base</p>
+                      <h4 className="product-name-viewer">{design.product.name}</h4>
                     </div>
-                    <div className="element-info">
-                      <strong>
-                        {element.type === 'text' ? 'Texto' : 
-                         element.type === 'image' ? 'Imagen' : 'Elemento'}
-                      </strong>
-                      {element.type === 'text' && element.konvaAttrs?.text && (
-                        <p>"{element.konvaAttrs.text.substring(0, 50)}{element.konvaAttrs.text.length > 50 ? '...' : ''}"</p>
-                      )}
-                      <small>
-                        Posición: ({Math.round(element.konvaAttrs?.x || 0)}, {Math.round(element.konvaAttrs?.y || 0)})
-                      </small>
+                    <div className="product-color-section-viewer">
+                      <p className="info-label-viewer">Color del producto</p>
+                      <div className="color-display-viewer">
+                        <div 
+                          className="color-swatch-viewer"
+                          style={{ backgroundColor: design.productColorFilter || '#1a1a1a' }}
+                        />
+                        <span className="color-value-viewer">{design.productColorFilter || '#1a1a1a'}</span>
+                      </div>
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer con acciones */}
-        <div className="modal-footer">
-          <button 
-            onClick={handleClose}
-            className="btn btn-secondary"
-          >
-            Cerrar
-          </button>
-
-          <div className="footer-actions">
-            {design.canEdit && (
-              <button 
-                onClick={handleEdit}
-                className="btn btn-edit"
-              >
-                ✏️ Editar Diseño
-              </button>
             )}
 
-            {design.needsResponse && (
-              <button 
-                onClick={handleQuoteResponse}
-                className="btn btn-respond"
-              >
-                💰 Responder Cotización
+            {/* Right Column - Design Elements */}
+            {design.elements && design.elements.length > 0 && (
+              <div className="section-viewer">
+                <h3 className="section-title-viewer">Elementos del diseño</h3>
+                <div className="elements-container-viewer">
+                  {Object.entries(groupedElements).map(([type, elements]) => {
+                    if (elements.length === 0) return null;
+                    
+                    const getElementTypeTitle = (type) => {
+                      switch(type) {
+                        case 'text': return 'TEXTOS';
+                        case 'image': return 'IMÁGENES';
+                        case 'shape': return 'FORMAS';
+                        case 'custom': return 'FORMAS';
+                        case 'ellipse': return 'FORMAS';
+                        case 'rectangle': return 'FORMAS';
+                        case 'line': return 'FORMAS';
+                        default: return 'FORMAS';
+                      }
+                    };
+                    
+                    const getElementName = (element, index) => {
+                      if (element.type === 'text' && element.konvaAttrs?.text) {
+                        return element.konvaAttrs.text.length > 15 
+                          ? element.konvaAttrs.text.substring(0, 15) + '...' 
+                          : element.konvaAttrs.text;
+                      }
+                      if (element.type === 'image') {
+                        return element.konvaAttrs?.imageUrl?.split('/').pop()?.split('.')[0] || `Image ${index + 1}`;
+                      }
+                      const shapeNames = {
+                        'rectangle': 'Rectángulo',
+                        'ellipse': 'Círculo',
+                        'line': 'Linea',
+                        'custom': 'Forma Personalizada'
+                      };
+                      return shapeNames[element.type] || `${element.type} ${index + 1}`;
+                    };
+                    
+                    return (
+                      <div key={type} className="element-group-viewer">
+                        <p className="element-group-title-viewer">
+                          {getElementTypeTitle(type)} ({elements.length})
+                        </p>
+                        <div className="element-badges-viewer">
+                          {elements.map((element, index) => (
+                            <span key={`${type}-${index}`} className="element-badge-viewer">
+                              {getElementName(element, index)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="dialog-footer-viewer">
+          <div className="download-section-viewer">
+            <button className="btn-download-viewer" onClick={() => {
+              // Dispara el evento de descarga
+              const downloadEvent = new CustomEvent('downloadDesign');
+              document.dispatchEvent(downloadEvent);
+            }}>
+              <Download className="icon-sm-viewer" />
+              Descargar PNG
+            </button>
+          </div>
+          <div className="footer-actions-viewer">
+            <button className="btn-secondary-viewer" onClick={handleClose}>
+              Cerrar
+            </button>
+            {design.canEdit && (
+              <button className="btn-primary-viewer" onClick={handleEdit}>
+                <Edit className="icon-sm-viewer" />
+                Abrir editor
               </button>
             )}
           </div>

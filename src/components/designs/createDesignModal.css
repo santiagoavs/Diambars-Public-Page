@@ -1,14 +1,34 @@
+.create-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(43, 43, 43, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.create-modal-overlay.hidden {
+  display: none;
+}
+
 .create-design-modal {
   background: linear-gradient(135deg, 
-  rgba(222, 248, 255, 0.25) 0%, 
-  rgba(157, 186, 227, 0.18) 50%, 
-  rgba(103, 149, 218, 0.15) 100%);
+  rgba(222, 248, 255, 0.45) 0%, 
+  rgba(191, 205, 225, 0.38) 50%, 
+  rgba(150, 173, 209, 0.35) 100%);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   border: 1px solid rgba(133, 205, 251, 0.2);
-  border-radius: 24px;
+  border-radius: 1rem;
   border-top: none;
-  width: 100%;
+  width: 50%;
   max-width: 1000px;
   max-height: 90vh;
   overflow: hidden;
@@ -22,13 +42,6 @@
   position: relative;
   display: flex;
   flex-direction: column;
-}
-
-.create-design-modal:hover {
-  box-shadow: 
-    0 12px 40px rgba(114, 175, 212, 0.03),
-    0 4px 12px rgba(104, 159, 193, 0.03),
-    inset 0 3.2px 0 rgba(255, 255, 255, 0.4);
 }
 
 .create-design-modal::before {
@@ -99,7 +112,7 @@
 
 .modal-title h2 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.25rem;
   font-weight: 700;
   background: linear-gradient(187deg, #1e3a5f 0%, #265c99 50%, #1e3a5f 100%);
   -webkit-background-clip: text;
@@ -111,7 +124,7 @@
 .modal-title p {
   margin: 0;
   opacity: 0.8;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   background: linear-gradient(187deg, #1e3a5f 0%, #265c99 50%, #1e3a5f 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -231,12 +244,12 @@
 
 .modal-step h3 {
   margin: 0 0 24px;
-  background: linear-gradient(187deg, rgba(255,255,255,0.95) 0%, rgba(204, 236, 248, 0.9) 50%, rgba(250, 253, 255, 0.95) 100%);
+  background: linear-gradient(187deg, #315f9b 0%, #265c99 50%, #2b5081 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
@@ -248,7 +261,7 @@
 }
 
 .product-search input {
-  width: 871px;
+  width: 93%;
 }
 
 .product-search input,
@@ -317,7 +330,6 @@
   max-height: 400px;
   overflow-y: auto;
   border-radius: 12px;
-  margin-bottom: 24px;
   padding: 16px;
 }
 
@@ -386,7 +398,7 @@
 
 .product-info h4 {
   margin: 0 0 8px;
-  background: linear-gradient(187deg, rgba(255,255,255,0.95) 0%, rgba(204, 236, 248, 0.9) 50%, rgba(226, 241, 251, 0.95) 100%);
+  background: linear-gradient(187deg, #1e3a5f 0%, #174170 50%, #1e3a5f 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -480,7 +492,7 @@
 
 .selected-product-info h4 {
   margin: 0 0 12px;
-  background: linear-gradient(187deg, rgba(255,255,255,0.95) 0%, rgba(204, 236, 248, 0.9) 50%, rgba(226, 241, 251, 0.95) 100%);
+  background: linear-gradient(187deg, #315f9b 0%, #265c99 50%, #2b5081 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -504,7 +516,7 @@
 
 .selected-product h5 {
   margin: 0;
-  background: linear-gradient(187deg, rgba(255,255,255,0.95) 0%, rgba(222, 246, 255, 0.9) 50%, rgba(226, 241, 251, 0.95) 100%);
+  background: linear-gradient(187deg, #315f9b 0%, #01285bda 50%, #265c99 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -528,7 +540,7 @@
 .design-name-input label {
   display: block;
   margin-bottom: 8px;
-  background: linear-gradient(187deg, rgba(255,255,255,0.95) 0%, rgba(204, 236, 248, 0.9) 50%, rgba(226, 241, 251, 0.95) 100%);
+  background: linear-gradient(187deg, #315f9b 0%, #265c99 50%, #2b5081 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -538,7 +550,7 @@
 }
 
 .design-name-input input {
-  width: 871px;
+  width: 93%;
 }
 
 .design-name-input input.error {

@@ -591,7 +591,7 @@ const DesignHub = ({ initialProductId = null }) => {
         {/* Header */}
         <div className="design-hub-header">
           <div className="hub-title">
-            <h1>Mis Diseños</h1>
+            <h1>Mis diseños</h1>
             <p>Gestiona y personaliza todos tus diseños en un solo lugar</p>
           </div>
           
