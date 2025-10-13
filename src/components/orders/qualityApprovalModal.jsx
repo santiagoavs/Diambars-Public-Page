@@ -24,21 +24,21 @@ const QualityApprovalModal = ({ isOpen, onClose, order, onSubmit, loading }) => 
   
   if (pendingPhotos.length === 0) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-container" onClick={e => e.stopPropagation()}>
-          <div className="modal-header">
+      <div className="order-modal-overlay" onClick={onClose}>
+        <div className="order-modal-container" onClick={e => e.stopPropagation()}>
+          <div className="order-modal-header">
             <h2>Control de Calidad</h2>
-            <button className="close-button" onClick={onClose}>
+            <button className="order-close-button" onClick={onClose}>
               <X size={24} />
             </button>
           </div>
-          <div className="modal-content centered-message">
-            <CheckCircle size={48} weight="fill" className="success-icon" />
+          <div className="order-modal-content order-centered-message">
+            <CheckCircle size={48} weight="fill" className="order-success-icon" />
             <h3>¡Todas las fotos han sido revisadas!</h3>
             <p>No hay más fotos pendientes de aprobación para esta orden.</p>
           </div>
-          <div className="modal-footer">
-            <button className="primary-button" onClick={onClose}>
+          <div className="order-modal-footer">
+            <button className="order-primary-button" onClick={onClose}>
               Cerrar
             </button>
           </div>
@@ -69,30 +69,30 @@ const QualityApprovalModal = ({ isOpen, onClose, order, onSubmit, loading }) => 
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container quality-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
+    <div className="order-modal-overlay" onClick={onClose}>
+      <div className="order-modal-container order-quality-modal" onClick={e => e.stopPropagation()}>
+        <div className="order-modal-header">
           <h2>Control de Calidad - Orden #{order.orderNumber}</h2>
-          <button className="close-button" onClick={onClose}>
+          <button className="order-close-button" onClick={onClose}>
             <X size={24} />
           </button>
         </div>
         
-        <div className="quality-content">
+        <div className="order-quality-content">
           {/* Photo List */}
-          <div className="photo-list">
+          <div className="order-photo-list">
             <h3>Fotos de Producción</h3>
-            <div className="photo-thumbnails">
+            <div className="order-photo-thumbnails">
               {order.productionPhotos?.map((photo, index) => (
                 <div 
                   key={photo._id || index}
-                  className={`photo-thumbnail ${selectedPhoto?._id === photo._id ? 'selected' : ''}`}
+                  className={`order-photo-thumbnail ${selectedPhoto?._id === photo._id ? 'selected' : ''}`}
                   onClick={() => setSelectedPhoto(photo)}
                 >
                   <Image size={24} weight="fill" />
                   <span>Foto {index + 1}</span>
                   {photo.clientResponse && (
-                    <span className={`status-badge ${photo.clientResponse.approved ? 'approved' : 'rejected'}`}>
+                    <span className={`order-photo-status-badge ${photo.clientResponse.approved ? 'approved' : 'rejected'}`}>
                       {photo.clientResponse.approved ? '✓' : '✗'}
                     </span>
                   )}
@@ -102,34 +102,34 @@ const QualityApprovalModal = ({ isOpen, onClose, order, onSubmit, loading }) => 
           </div>
           
           {/* Main Content */}
-          <div className="quality-main">
+          <div className="order-quality-main">
             {/* Photo Preview */}
-            <div className="photo-preview">
+            <div className="order-photo-preview">
               {selectedPhoto?.url ? (
                 <img 
                   src={selectedPhoto.url} 
                   alt={`Foto de producción ${selectedPhoto._id}`} 
-                  className="preview-image"
+                  className="order-preview-image"
                 />
               ) : (
-                <div className="no-image">
+                <div className="order-no-image">
                   <Image size={48} weight="light" />
                   <p>No hay imagen disponible</p>
                 </div>
               )}
               
-              <div className="photo-info">
+              <div className="order-photo-info">
                 <p><strong>Subido el:</strong> {new Date(selectedPhoto?.uploadedAt).toLocaleDateString('es-ES')}</p>
                 <p><strong>Notas del equipo:</strong> {selectedPhoto?.notes || 'Sin notas'}</p>
               </div>
             </div>
             
             {/* Approval Form */}
-            <form onSubmit={handleSubmit} className="approval-form">
+            <form onSubmit={handleSubmit} className="order-approval-form">
               <h3>¿Cómo calificas esta producción?</h3>
               
-              <div className="decision-options">
-                <label className={`decision-option ${decision === 'approve' ? 'selected' : ''}`}>
+              <div className="order-decision-options">
+                <label className={`order-decision-option ${decision === 'approve' ? 'selected' : ''}`}>
                   <input 
                     type="radio" 
                     name="decision" 
@@ -137,14 +137,14 @@ const QualityApprovalModal = ({ isOpen, onClose, order, onSubmit, loading }) => 
                     checked={decision === 'approve'}
                     onChange={() => setDecision('approve')}
                   />
-                  <div className="option-content">
-                    <CheckCircle size={24} weight="fill" className="approve-icon" />
+                  <div className="order-option-content">
+                    <CheckCircle size={24} weight="fill" className="order-approve-icon" />
                     <span>Aprobar</span>
                     <p>La producción cumple con mis expectativas.</p>
                   </div>
                 </label>
                 
-                <label className={`decision-option ${decision === 'reject' ? 'selected' : ''}`}>
+                <label className={`order-decision-option ${decision === 'reject' ? 'selected' : ''}`}>
                   <input 
                     type="radio" 
                     name="decision" 
@@ -152,8 +152,8 @@ const QualityApprovalModal = ({ isOpen, onClose, order, onSubmit, loading }) => 
                     checked={decision === 'reject'}
                     onChange={() => setDecision('reject')}
                   />
-                  <div className="option-content">
-                    <XCircle size={24} weight="fill" className="reject-icon" />
+                  <div className="order-option-content">
+                    <XCircle size={24} weight="fill" className="order-reject-icon" />
                     <span>Rechazar</span>
                     <p>Hay problemas que necesitan corrección.</p>
                   </div>
@@ -161,7 +161,7 @@ const QualityApprovalModal = ({ isOpen, onClose, order, onSubmit, loading }) => 
               </div>
               
               {decision === 'reject' && (
-                <div className="feedback-section">
+                <div className="order-feedback-section">
                   <label htmlFor="feedback">Explica los problemas encontrados:</label>
                   <textarea
                     id="feedback"
@@ -174,12 +174,12 @@ const QualityApprovalModal = ({ isOpen, onClose, order, onSubmit, loading }) => 
                 </div>
               )}
               
-              {error && <div className="error-message">{error}</div>}
+              {error && <div className="order-error-message">{error}</div>}
               
-              <div className="form-actions">
+              <div className="order-form-actions">
                 <button 
                   type="button" 
-                  className="secondary-button"
+                  className="order-secondary-button"
                   onClick={onClose}
                   disabled={loading}
                 >
@@ -187,12 +187,12 @@ const QualityApprovalModal = ({ isOpen, onClose, order, onSubmit, loading }) => 
                 </button>
                 <button 
                   type="submit" 
-                  className="primary-button"
+                  className="order-primary-button"
                   disabled={loading || !decision}
                 >
                   {loading ? (
                     <>
-                      <SpinnerGap size={20} className="spinner" />
+                      <SpinnerGap size={20} className="order-spinner" />
                       Procesando...
                     </>
                   ) : 'Enviar Respuesta'}

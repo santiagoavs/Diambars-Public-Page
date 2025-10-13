@@ -146,11 +146,11 @@ const QuoteResponseModal = ({
         {/* ==================== HEADER ==================== */}
         <div className="modal-header-response">
           <div className="modal-title-response">
-            <span className="modal-icon">
+            <span className="modal-icon-response">
               <CurrencyDollar size={32} weight="duotone" />
             </span>
             <div>
-              <h2>Responder Cotización</h2>
+              <h2>Responder cotización</h2>
               <p>Revisa los detalles y decide si deseas continuar</p>
             </div>
           </div>
@@ -170,7 +170,7 @@ const QuoteResponseModal = ({
           {/* Información del Diseño */}
           <div className="design-info-section">
             <h3>
-              <Palette size={20} weight="duotone" />
+              <Palette size={20} color="#8B1538" weight="duotone" />
               Información del Diseño
             </h3>
             <div className="design-summary">
@@ -204,14 +204,14 @@ const QuoteResponseModal = ({
           {/* Detalles de la Cotización */}
           <div className="quote-details-section">
             <h3>
-              <CurrencyDollar size={20} weight="duotone" />
-              Detalles de la Cotización
+              <CurrencyDollar size={20} color='#8B1538' weight="duotone" />
+              Detalles de la cotización
             </h3>
             
             <div className="quote-info">
               {/* Precio */}
               <div className="quote-price">
-                <div className="price-label">Precio Total</div>
+                <div className="price-label">Precio total</div>
                 <div className="price-value-response">
                   {design.formattedPrice || `$${design.price?.toFixed(2) || '0.00'}`}
                 </div>
@@ -219,7 +219,7 @@ const QuoteResponseModal = ({
 
               {/* Tiempo de Producción */}
               <div className="quote-timeline">
-                <div className="timeline-label">Tiempo de Producción</div>
+                <div className="timeline-label">Tiempo de producción</div>
                 <div className="timeline-value">
                   {design.estimatedDays || design.productionDays || '7'} días
                 </div>
@@ -235,7 +235,7 @@ const QuoteResponseModal = ({
               <div className="admin-notes">
                 <h4>
                   <Note size={16} weight="duotone" />
-                  {' '}Notas del Administrador
+                  {' '}Notas del administrador
                 </h4>
                 <p>"{design.adminNotes}"</p>
               </div>
@@ -245,8 +245,8 @@ const QuoteResponseModal = ({
           {/* Decisión */}
           <div className="decision-section">
             <h3>
-              <CheckCircle size={20} weight="duotone" />
-              Tu Decisión
+              <CheckCircle size={20} color='#8B1538' weight="duotone" />
+              Tu decisión
             </h3>
             
             <div className="decision-options">
@@ -267,7 +267,7 @@ const QuoteResponseModal = ({
                     <CheckCircle size={40} weight="duotone" color="#10B981" />
                   </span>
                   <div className="option-text">
-                    <h4>Aceptar Cotización</h4>
+                    <h4>Aceptar cotización</h4>
                     <p>Confirmar y proceder con la producción</p>
                   </div>
                 </div>
@@ -290,7 +290,7 @@ const QuoteResponseModal = ({
                     <XCircle size={40} weight="duotone" color="#EF4444" />
                   </span>
                   <div className="option-text">
-                    <h4>Rechazar Cotización</h4>
+                    <h4>Rechazar cotización</h4>
                     <p>Cancelar y solicitar cambios</p>
                   </div>
                 </div>
@@ -301,7 +301,7 @@ const QuoteResponseModal = ({
           {/* Notas del Cliente */}
           <div className="notes-section">
             <h3>
-              <ChatCircleDots size={20} weight="duotone" />
+              <ChatCircleDots size={20} color='#8B1538' weight="duotone" />
               {decision === 'accept' ? ' Notas Adicionales (Opcional)' : ' Motivo del Rechazo'}
               {decision === 'reject' && <span className="required-badge">Requerido</span>}
             </h3>
@@ -325,7 +325,7 @@ const QuoteResponseModal = ({
           {/* Información Importante */}
           <div className="important-info">
             <span className="info-icon">
-              <Info size={32} weight="duotone" color="#112f57" />
+              <Info size={32} weight="duotone" color="#8B1538" />
             </span>
             <div className="info-content">
               <h4>Información Importante</h4>
@@ -378,12 +378,12 @@ const QuoteResponseModal = ({
             ) : decision === 'accept' ? (
               <>
                 <CheckCircle size={18} weight="bold" />
-                Aceptar Cotización
+                Aceptar cotización
               </>
             ) : decision === 'reject' ? (
               <>
                 <XCircle size={18} weight="bold" />
-                Rechazar Cotización
+                Rechazar cotización
               </>
             ) : (
               'Selecciona una opción'

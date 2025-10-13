@@ -38,8 +38,8 @@ export default function Notifications() {
   const handleNotificationClick = (designId) => {
     // Marca como leida
     setReadNotifications(prev => new Set([...prev, designId]));
-    // Navega a design hub
-    navigate('/design-hub');
+    // Navega a orders hub
+    navigate('/orders-hub');
     // Cierra dropdown
     setIsOpen(false);
   };
@@ -132,7 +132,7 @@ export default function Notifications() {
           </div>
           {isAuthenticated && needsResponseDesigns?.length > 0 && (
             <div className="notifications-footer">
-              <a href="/design-hub">Ver todos los diseños</a>
+              <a href="/orders-hub">Ver todos los pedidos</a>
             </div>
           )}
         </div>

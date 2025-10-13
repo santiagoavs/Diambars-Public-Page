@@ -502,7 +502,7 @@ const CreateDesignModal = ({
           <div className="modal-footer">
             <button 
               onClick={handleClose} 
-              className="btn btn-cancel"
+              className="btn btn-cancel-create"
               disabled={loading}
             >
               Cancelar

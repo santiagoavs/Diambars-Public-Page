@@ -51,7 +51,7 @@ function App() {
           
           {/* Protected Routes */}
           <Route 
-            path="/orders" 
+            path="/orders-hub" 
             element={
               <ProtectedRoute>
                 <OrdersHub />
