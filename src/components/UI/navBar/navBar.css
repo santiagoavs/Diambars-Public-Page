@@ -7,10 +7,12 @@
     --active-bg-end: #281917;
 }
   
+/* ⚡ Optimized font loading with font-display: swap */
 @font-face {
     font-family: 'DiambarsFont';
     src: url('/fonts/AestheticMoment.ttf') format('truetype');
     font-weight: normal;
+    font-display: swap; /* Show fallback font while loading */
     font-style: normal;
 }
 

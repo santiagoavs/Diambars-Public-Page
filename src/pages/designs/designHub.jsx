@@ -465,7 +465,7 @@ const DesignHub = ({ initialProductId = null }) => {
           <p className="design-product">{design.product?.name}</p>
           <div className="design-meta">
             <span className="design-date">
-              {design.createdAt.toLocaleDateString()}
+              {new Date(design.createdAt).toLocaleDateString()}
             </span>
             <span 
               className="design-status"

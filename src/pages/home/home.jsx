@@ -1,10 +1,36 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, lazy, Suspense, memo } from 'react';
 import { Link } from 'react-router-dom';
 import './home.css';
-import ContactButton from '../../components/UI/contactButton/contactButton';
-import Notifications from '../../components/UI/notifications/notifications';
-import Footer from '../../components/UI/footer/footer';
 import { useNavigate } from 'react-router-dom';
+
+// ⚡ Lazy load heavy components
+const ContactButton = lazy(() => import('../../components/UI/contactButton/contactButton'));
+const Notifications = lazy(() => import('../../components/UI/notifications/notifications'));
+const Footer = lazy(() => import('../../components/UI/footer/footer'));
+
+// ⚡ Memoized static hero content
+const HeroContent = memo(({ onNavigate }) => (
+  <>
+    <h1 className="hero-title">
+      Traemos tus ideas a la realidad.
+    </h1>
+    <p className="hero-subtitle">
+      Empieza a crear tus productos favoritos. <br />Explora nuestro catálogo
+      y elige el producto de tu interés para personalizarlo.
+    </p>
+    <button 
+      className="hero-cta-button" 
+      onClick={onNavigate}
+    >
+      <svg className="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
+      <span>Explorar catálogo</span>
+    </button>
+  </>
+));
+
+HeroContent.displayName = 'HeroContent';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -12,6 +38,7 @@ export default function Home() {
   const videoRef = useRef(null);
   const tshirtSectionRef = useRef(null);
   const sublimationSectionRef = useRef(null);
+  const carouselRef = useRef(null); // ⚡ For video lazy loading
   
   // T-shirt template switching images state
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -24,6 +51,11 @@ export default function Home() {
     'images/tshirt-designs/design6.webp'
   ], []);
 
+  // ⚡ Memoized navigation handler
+  const handleNavigateToProducts = useCallback(() => {
+    navigate('/products');
+  }, [navigate]);
+
   // Sublimation form state
   const [sublimationData, setSublimationData] = useState({
     subject: '',
@@ -34,41 +66,74 @@ export default function Home() {
   const [sublimationStatus, setSublimationStatus] = useState(null);
   const [sublimationMessage, setSublimationMessage] = useState('');
 
+  // ⚡ Lazy load videos with Intersection Observer
   useEffect(() => {
-    // Optimized video handling
-    const video = videoRef.current;
-    if (video) {
-      video.play().catch(() => {});
-      video.style.transform = 'translateZ(0)';
-    }
+    const videos = document.querySelectorAll('.carousel-video');
+    
+    const videoObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const video = entry.target;
+        if (entry.isIntersecting) {
+          // Load and play video when visible
+          if (!video.src && video.dataset.src) {
+            video.src = video.dataset.src;
+            video.load();
+          }
+          video.play().catch(() => {});
+        } else {
+          // Pause video when not visible to save resources
+          video.pause();
+        }
+      });
+    }, {
+      threshold: 0.25, // Start loading when 25% visible
+      rootMargin: '50px' // Start loading 50px before entering viewport
+    });
 
-    // Optimized T-shirt image switching with reduced frequency
+    videos.forEach(video => {
+      video.style.transform = 'translateZ(0)'; // GPU acceleration
+      videoObserver.observe(video);
+    });
+
+    return () => {
+      videos.forEach(video => videoObserver.unobserve(video));
+    };
+  }, []);
+
+  useEffect(() => {
+    // ⚡ Optimized T-shirt image switching with reduced frequency
     const imageInterval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => 
         (prevIndex + 1) % switchingImages.length
       );
-    }, 1200); // Increased to 1200ms for better performance
+    }, 1200);
 
     const heroContainer = heroContainerRef.current;
     if (!heroContainer) return;
 
-    // Optimized mouse tracking with reduced frequency
-    let mouseThrottle = false;
+    // ⚡ Optimized mouse tracking with debounce (16ms = 60fps)
     let animationId = null;
+    let lastTime = 0;
+    const throttleDelay = 16; // 60fps
+    
     const handleMouseMove = (e) => {
-      if (!mouseThrottle) {
-        mouseThrottle = true;
-        if (animationId) cancelAnimationFrame(animationId);
-        animationId = requestAnimationFrame(() => {
-          const rect = heroContainer.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          
-          heroContainer.style.setProperty('--mouse-x', `${x}px`);
-          heroContainer.style.setProperty('--mouse-y', `${y}px`);
-          mouseThrottle = false;
-        });
+      const now = performance.now();
+      
+      if (now - lastTime < throttleDelay) {
+        return; // Skip if called too frequently
       }
+      
+      lastTime = now;
+      
+      if (animationId) cancelAnimationFrame(animationId);
+      
+      animationId = requestAnimationFrame(() => {
+        const rect = heroContainer.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        heroContainer.style.setProperty('--mouse-x', `${x}%`);
+        heroContainer.style.setProperty('--mouse-y', `${y}%`);
+      });
     };
 
     const handleMouseEnter = () => {
@@ -92,7 +157,7 @@ export default function Home() {
     };
   }, [switchingImages.length]);
 
-  // Optimized scroll handler with memoization
+  // Original scroll handler
   const handleScroll = useCallback(() => {
     const tshirtSection = tshirtSectionRef.current;
     const sublimationSection = sublimationSectionRef.current;
@@ -106,7 +171,6 @@ export default function Home() {
     // Calculate scroll progress for t-shirt section (dark zones)
     let tshirtScrollProgress = 0;
     
-    // Start transition earlier for smoother effect
     const triggerStart = windowHeight * 1.2;
     const triggerEnd = -tshirtRect.height * 0.3;
     
@@ -139,19 +203,19 @@ export default function Home() {
     }
     
     // Create smooth transition between zones
-    const transitionFactor = Math.min(1, sublimationScrollProgress * 2); // Faster transition start
+    const transitionFactor = Math.min(1, sublimationScrollProgress * 2);
     
-    // Apply dark zone opacity for t-shirt section (fade out as sublimation zone activates)
+    // Apply dark zone opacity for t-shirt section
     const baseDarkOpacity = Math.min(0.9, tshirtScrollProgress * 1.3);
     const darkZoneOpacity = baseDarkOpacity * (1 - transitionFactor);
     pageWrapper.style.setProperty('--dark-zone-opacity', darkZoneOpacity);
     
-    // Apply light zone opacity for sublimation section (fade in as sublimation zone activates)
+    // Apply light zone opacity for sublimation section
     const baseLightOpacity = Math.min(0.8, sublimationScrollProgress * 1.0);
     const lightZoneOpacity = baseLightOpacity * transitionFactor;
     pageWrapper.style.setProperty('--light-zone-opacity', lightZoneOpacity);
     
-    // Smooth text color transitions using CSS classes instead of inline styles
+    // Smooth text color transitions
     const isDark = darkZoneOpacity > 0.4;
     
     if (isDark) {
@@ -163,7 +227,7 @@ export default function Home() {
     }
   }, []);
 
-  // Optimized dark zone parallax effect for t-shirt section
+  // Original parallax scroll listener
   useEffect(() => {
     let ticking = false;
     let scrollAnimationId = null;
@@ -179,7 +243,6 @@ export default function Home() {
       }
     };
 
-    // Throttled scroll listener for better performance
     window.addEventListener('scroll', throttledHandleScroll, { passive: true });
     handleScroll(); // Initial call
 
@@ -282,25 +345,14 @@ export default function Home() {
         <div className="hero-container" ref={heroContainerRef}>
           <img 
             src="/images/navbar/Logo-2.png" 
-            alt="Logo" 
+            alt="Diambars Sublim Logo" 
             className="hero-logo"
+            width="150"
+            height="150"
+            loading="eager"
+            fetchpriority="high"
           />
-          <h1 className="hero-title">
-            Traemos tus ideas a la realidad.
-          </h1>
-          <p className="hero-subtitle">
-            Empieza a crear tus productos favoritos. <br />Explora nuestro catálogo
-            y elige el producto de tu interés para personalizarlo.
-          </p>
-          <button 
-            className="hero-cta-button" 
-            onClick={() => navigate('/catalogue')}
-          >
-            <span>Explorar Catálogo</span>
-            <svg className="slots-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          <HeroContent onNavigate={() => navigate('/catalogue')} />
           <div className="slots-indicator">
             <svg className="products-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -309,105 +361,146 @@ export default function Home() {
           </div>
 
           {/* Product Carousel */}
-          <div className="hero-carousel">
+          <div className="hero-carousel" ref={carouselRef}>
             <div className="hero-carousel-track">
               <div className="hero-carousel-item">
                 <video 
-                  ref={videoRef}
-                  autoPlay 
                   loop 
                   muted 
                   playsInline
-                  preload="metadata"
+                  preload="none"
+                  data-src="/videos/product1.mp4"
                   className="carousel-video"
+                  poster="/images/home/product1-poster.jpg"
                 >
-                  <source src="/videos/product1.mp4" type="video/mp4" />
-                  
+                  <source data-src="/videos/product1.mp4" type="video/mp4" />
                 </video>
               </div>
               <div className="hero-carousel-item">
                 <video 
-                  autoPlay 
                   loop 
                   muted 
                   playsInline
-                  preload="metadata"
+                  preload="none"
+                  data-src="/videos/product2.mp4"
                   className="carousel-video"
+                  poster="/images/home/product2-poster.jpg"
                 >
-                  <source src="/videos/product2.mp4" type="video/mp4" />
-                  
+                  <source data-src="/videos/product2.mp4" type="video/mp4" />
                 </video>
               </div>
               <div className="hero-carousel-item">
-                <img src="images/home/product3.png" alt="Producto 3" loading="lazy" />
+                <img 
+                  src="images/home/product3.png" 
+                  alt="Producto personalizado 3" 
+                  loading="lazy"
+                  width="280"
+                  height="160"
+                  decoding="async"
+                />
               </div>
               <div className="hero-carousel-item">
-                <img src="images/home/product4.png" alt="Producto 4" loading="lazy" />
+                <img 
+                  src="images/home/product4.png" 
+                  alt="Producto personalizado 4" 
+                  loading="lazy"
+                  width="280"
+                  height="160"
+                  decoding="async"
+                />
               </div>
               <div className="hero-carousel-item">
                 <video 
-                  autoPlay 
                   loop 
                   muted 
                   playsInline
-                  preload="metadata"
+                  preload="none"
+                  data-src="/videos/product5.mp4"
                   className="carousel-video"
+                  poster="/images/home/product5-poster.jpg"
                 >
-                  <source src="/videos/product5.mp4" type="video/mp4" />
-                  
+                  <source data-src="/videos/product5.mp4" type="video/mp4" />
                 </video>
               </div>
               <div className="hero-carousel-item">
                 <video 
-                  autoPlay 
                   loop 
                   muted 
                   playsInline
-                  preload="metadata"
+                  preload="none"
+                  data-src="/videos/product6.mp4"
                   className="carousel-video product6-video"
+                  poster="/images/home/product6-poster.jpg"
                 >
-                  <source src="/videos/product6.mp4" type="video/mp4" />
-                  
+                  <source data-src="/videos/product6.mp4" type="video/mp4" />
                 </video>
               </div>
               <div className="hero-carousel-item">
-                <img src="images/home/product7.png" alt="Producto 7" loading="lazy" />
+                <img 
+                  src="images/home/product7.png" 
+                  alt="Producto personalizado 7" 
+                  loading="lazy"
+                  width="280"
+                  height="160"
+                  decoding="async"
+                />
               </div>
               <div className="hero-carousel-item">
-                <img src="images/home/product8.png" alt="Producto 8" loading="lazy" />
+                <img 
+                  src="images/home/product8.png" 
+                  alt="Producto personalizado 8" 
+                  loading="lazy"
+                  width="280"
+                  height="160"
+                  decoding="async"
+                />
               </div>
               {/* Duplicate first items for seamless loop */}
               <div className="hero-carousel-item">
                 <video 
-                  autoPlay 
                   loop 
                   muted 
                   playsInline
-                  preload="metadata"
+                  preload="none"
+                  data-src="/videos/product1.mp4"
                   className="carousel-video"
+                  poster="/images/home/product1-poster.jpg"
                 >
-                  <source src="/videos/product1.mp4" type="video/mp4" />
-                  
+                  <source data-src="/videos/product1.mp4" type="video/mp4" />
                 </video>
               </div>
               <div className="hero-carousel-item">
                 <video 
-                  autoPlay 
                   loop 
                   muted 
                   playsInline
-                  preload="metadata"
+                  preload="none"
+                  data-src="/videos/product2.mp4"
                   className="carousel-video"
+                  poster="/images/home/product2-poster.jpg"
                 >
-                  <source src="/videos/product2.mp4" type="video/mp4" />
-                  
+                  <source data-src="/videos/product2.mp4" type="video/mp4" />
                 </video>
               </div>
               <div className="hero-carousel-item">
-              <img src="images/home/product3.png" alt="Producto 3" loading="lazy" />
+              <img 
+                src="images/home/product3.png" 
+                alt="Producto personalizado 3" 
+                loading="lazy"
+                width="280"
+                height="160"
+                decoding="async"
+              />
               </div>
               <div className="hero-carousel-item">
-                <img src="images/home/product4.png" alt="Producto 4" loading="lazy" />
+                <img 
+                  src="images/home/product4.png" 
+                  alt="Producto personalizado 4" 
+                  loading="lazy"
+                  width="280"
+                  height="160"
+                  decoding="async"
+                />
               </div>
             </div>
           </div>
@@ -431,24 +524,33 @@ export default function Home() {
             <div className="tshirt-template">
               <img 
                 src="images/home/white-t-shirt.webp" 
-                alt="White T-shirt Template" 
+                alt="Plantilla de camiseta blanca personalizable" 
                 className="tshirt-base"
                 loading="lazy"
+                width="400"
+                height="500"
+                decoding="async"
               />
               
-              {/* Switching design overlay */}
+              {/* Switching design overlay - ⚡ Only render active image */}
               <div className="design-overlay">
-                {switchingImages.map((image, index) => (
-                  <img
-                    key={index}
-                    src={image}
-                    alt={`Design ${index + 1}`}
-                    className={`design-image ${
-                      index === currentImageIndex ? 'active' : ''
-                    }`}
-                    loading="lazy"
-                  />
-                ))}
+                {switchingImages.map((image, index) => {
+                  // ✅ Only render the current active image to prevent overlap
+                  if (index !== currentImageIndex) return null;
+                  
+                  return (
+                    <img
+                      key={`design-${index}-${currentImageIndex}`}
+                      src={image}
+                      alt={`Diseño personalizado ${index + 1}`}
+                      className="design-image active"
+                      loading="eager"
+                      width="200"
+                      height="200"
+                      decoding="sync"
+                    />
+                  );
+                })}
               </div>
             </div>
 
@@ -576,9 +678,17 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <Notifications />
-      <ContactButton />
-      <Footer />
+      
+      {/* ⚡ Lazy load non-critical components */}
+      <Suspense fallback={<div style={{ height: '50px' }} />}>
+        <Notifications />
+      </Suspense>
+      <Suspense fallback={<div style={{ height: '60px' }} />}>
+        <ContactButton />
+      </Suspense>
+      <Suspense fallback={<div style={{ height: '200px' }} />}>
+        <Footer />
+      </Suspense>
     </div>
   );
 }

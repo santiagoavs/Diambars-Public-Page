@@ -5,10 +5,16 @@ import DesignService from '../api/designService';
 
 const useDesigns = () => {
   // ==================== ESTADOS ====================
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [designs, setDesigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({ // ⚡ Pagination state
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 0
+  });
 
   // ==================== UTILIDADES ====================
 
@@ -38,8 +44,8 @@ const useDesigns = () => {
   }, []);
 
   // Formatear diseño
-  const formatDesign = useCallback((design) => {
-    return DesignService.formatDesign(design);
+  const formatDesign = useCallback((design, minimal = false) => {
+    return DesignService.formatDesign(design, minimal);
   }, []);
 
   // ==================== FUNCIONES PRINCIPALES ====================
@@ -64,16 +70,26 @@ const useDesigns = () => {
         throw new Error("Formato de respuesta inválido");
       }
 
-      // Formatear diseños
+      // ⚡ Use minimal formatting for list views (faster)
       const formattedDesigns = response.data.designs
-        .map(formatDesign)
+        .map(design => formatDesign(design, true)) // ⚡ minimal = true
         .filter(design => design !== null);
       
       setDesigns(formattedDesigns);
       
+      // ⚡ Update pagination state
+      setPagination({
+        page: response.data.page || 1,
+        limit: response.data.limit || 10,
+        total: response.data.total || 0,
+        pages: response.data.pages || 0
+      });
+      
       console.log('✅ [useDesigns] Diseños cargados:', {
         count: formattedDesigns.length,
-        total: response.data.total
+        total: response.data.total,
+        page: response.data.page,
+        pages: response.data.pages
       });
       
       return formattedDesigns;
@@ -468,6 +484,7 @@ const useDesigns = () => {
     designs,
     loading,
     error,
+    pagination, // ⚡ Pagination info
 
     // Funciones principales CRUD
     fetchUserDesigns,
@@ -497,6 +514,7 @@ const useDesigns = () => {
     isEmpty: !loading && designs.length === 0,
     hasError: !!error,
     isFirstLoad: !loading && designs.length === 0 && !error,
+    hasMore: pagination.page < pagination.pages, // ⚡ Has more pages
     
     // Funciones auxiliares
     formatDesign,

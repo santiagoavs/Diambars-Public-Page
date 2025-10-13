@@ -277,15 +277,46 @@ class DesignService {
   /**
    * Formatear diseño para mostrar en la UI
    * @param {Object} design - Diseño raw del backend
+   * @param {Boolean} minimal - Si true, solo formatea campos esenciales (más rápido)
    * @returns {Object} Diseño formateado
    */
-  formatDesign(design) {
+  formatDesign(design, minimal = false) {
     if (!design || typeof design !== 'object') {
       return null;
     }
     
     try {
+      // ⚡ Minimal formatting for list views (faster)
+      if (minimal) {
+        return {
+          _id: design._id || design.id,
+          id: design._id || design.id,
+          name: design.name || 'Diseño sin nombre',
+          status: design.status || 'draft',
+          price: design.price || 0,
+          formattedPrice: design.price ? `$${design.price.toFixed(2)}` : 'Pendiente', // ✅ For display
+          productionDays: design.productionDays || 0,
+          createdAt: design.createdAt, // ⚡ Keep as string (no Date conversion)
+          previewImage: design.previewImage,
+          orderId: design.orderId || null,
+          clientNotes: design.clientNotes || '', // ✅ For design cards
+          // Product info (from backend minimal response)
+          productName: design.productName,
+          productImage: design.productImage,
+          product: design.product ? {
+            name: design.product.name || design.productName,
+            image: design.product.images?.main || design.productImage
+          } : null,
+          // ✅ Essential computed properties for UI logic
+          needsResponse: design.status === 'quoted', // For quote response alerts
+          canEdit: ['draft', 'pending'].includes(design.status),
+          canCancel: ['pending', 'quoted'].includes(design.status)
+        };
+      }
+      
+      // Full formatting for detail views
       const formatted = {
+        _id: design._id || design.id,
         id: design._id || design.id,
         name: design.name || 'Diseño sin nombre',
         status: design.status || 'draft',
@@ -297,6 +328,7 @@ class DesignService {
         quotedAt: design.quotedAt ? new Date(design.quotedAt) : null,
         approvedAt: design.approvedAt ? new Date(design.approvedAt) : null,
         rejectedAt: design.rejectedAt ? new Date(design.rejectedAt) : null,
+        orderId: design.orderId || null,
         
         // Información del producto
         product: design.product ? {

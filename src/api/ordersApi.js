@@ -37,9 +37,22 @@ export const ordersAPI = {
     return await apiClient.get(`orders/${orderId}`);
   },
 
-  // Crear orden desde diseño cotizado
+  // Crear orden desde diseño cotizado (legacy)
   createOrderFromDesign: async (orderData) => {
     return await apiClient.post('orders', orderData);
+  },
+
+  // Crear orden desde diseño aprobado (nuevo flujo)
+  createOrderFromApprovedDesign: async (orderData) => {
+    console.log('📦 [ordersApi] Creating order from approved design:', orderData);
+    try {
+      const response = await apiClient.post('orders/from-design', orderData);
+      console.log('✅ [ordersApi] Order created successfully:', response.data);
+      return response;
+    } catch (error) {
+      console.error('❌ [ordersApi] Error creating order from design:', error);
+      throw error;
+    }
   },
 
   // Responder a cotización

@@ -8,8 +8,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(43, 43, 43, 0.6);  
-  backdrop-filter: blur(2px);
+  background-color: rgba(43, 43, 43, 0.35);  
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -460,7 +460,7 @@
   background: rgba(239, 68, 68, 0.04);
 }
 
-.option-icon {
+.option-icon-response {
   font-size: 2.5rem;
   flex-shrink: 0;
 }
@@ -636,7 +636,7 @@
 }
 
 /* Iconos de las opciones de decisión */
-.option-icon {
+.option-icon-response {
   display: flex;
   align-items: center;
   justify-content: center;

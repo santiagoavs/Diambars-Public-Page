@@ -2,10 +2,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/authContext';
 import { useOrders } from '../../hooks/useOrders';
+import useDesigns from '../../hooks/useDesign';
+import { ordersAPI } from '../../api/ordersApi';
 import Footer from '../../components/UI/footer/footer';
 import OrderDetailModal from '../../components/orders/orderDetailModal';
 import QuoteResponseModal from '../../components/designs/quoteResponseModal';
 import QualityApprovalModal from '../../components/orders/qualityApprovalModal';
+import CompleteOrderModal from '../../components/orders/completeOrderModal';
+import Swal from 'sweetalert2';
 import './ordersHub.css';
 
 const OrdersHub = () => {
@@ -23,12 +27,16 @@ const OrdersHub = () => {
     refreshOrders();
   };
 
+  const { designs = [], refetch: refreshDesigns } = useDesigns();
+  
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedDesign, setSelectedDesign] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [showQualityModal, setShowQualityModal] = useState(false);
+  const [showCompleteOrderModal, setShowCompleteOrderModal] = useState(false);
 
   // Estadísticas
   const stats = useMemo(() => {
@@ -72,6 +80,36 @@ const OrdersHub = () => {
     return filtered;
   }, [orders, activeTab, searchTerm]);
 
+  // Get approved designs that need order completion
+  const approvedDesigns = useMemo(() => {
+    // Get all design IDs that already have orders
+    const designIdsWithOrders = new Set(
+      orders.flatMap(order => 
+        order.items?.map(item => {
+          // Handle both populated and non-populated design references
+          const designId = item.design?._id || item.design;
+          return typeof designId === 'string' ? designId : designId?.toString();
+        }).filter(Boolean) || []
+      )
+    );
+    
+    const approved = designs.filter(d => d.status === 'approved');
+    
+    // Filter out designs that:
+    // 1. Already have an orderId field (new behavior)
+    // 2. Have a corresponding order in the orders list (cross-reference)
+    const filtered = approved.filter(d => {
+      const hasOrderId = !!d.orderId;
+      const designIdStr = String(d._id);
+      const hasExistingOrder = designIdsWithOrders.has(designIdStr);
+      return !hasOrderId && !hasExistingOrder;
+    });
+    
+    console.log('📋 [OrdersHub] Approved designs pending order:', filtered.length);
+    
+    return filtered;
+  }, [designs, orders]);
+
   // Handlers
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
@@ -86,6 +124,85 @@ const OrdersHub = () => {
   const handleApproveQuality = (order) => {
     setSelectedOrder(order);
     setShowQualityModal(true);
+  };
+
+  const handleCompleteOrder = (design) => {
+    setSelectedDesign(design);
+    setShowCompleteOrderModal(true);
+  };
+
+  const handleOrderComplete = async (formData) => {
+    console.log('📦 [OrdersHub] Completing order with data:', formData);
+    console.log('📦 [OrdersHub] Selected design:', selectedDesign);
+    
+    try {
+      // Validate that we have a selected design
+      if (!selectedDesign) {
+        throw new Error('No hay un diseño seleccionado');
+      }
+
+      // Get the design ID (try both _id and id)
+      const designId = selectedDesign._id || selectedDesign.id;
+      
+      if (!designId) {
+        console.error('❌ [OrdersHub] Design object:', selectedDesign);
+        throw new Error('El diseño seleccionado no tiene un ID válido');
+      }
+
+      // Prepare order data for API
+      const orderData = {
+        designId: designId,
+        deliveryType: formData.deliveryType,
+        paymentMethod: formData.paymentMethod
+      };
+
+      // Only add deliveryAddress if it exists and deliveryType is 'delivery'
+      if (formData.deliveryType === 'delivery' && formData.shippingAddress) {
+        orderData.deliveryAddress = formData.shippingAddress;
+      }
+
+      // Only add notes if they exist and are not empty
+      if (formData.notes && formData.notes.trim()) {
+        orderData.notes = formData.notes.trim();
+      }
+
+      console.log('📤 [OrdersHub] Sending order data:', orderData);
+
+      // Call API to create order from approved design
+      const response = await ordersAPI.createOrderFromApprovedDesign(orderData);
+
+      if (response.success) {
+        // Close the modal first
+        setShowCompleteOrderModal(false);
+        setSelectedDesign(null);
+        
+        // Refresh data
+        await refreshOrders();
+        await refreshDesigns();
+        
+        // Show success message after refresh
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Pedido Creado!',
+          text: `Tu pedido ${response.data.order.orderNumber} ha sido creado exitosamente.`,
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#10B981'
+        });
+      }
+    } catch (error) {
+      console.error('❌ [OrdersHub] Error completing order:', error);
+      
+      // Show error message
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error al Crear Pedido',
+        text: error.message || 'Hubo un problema al crear tu pedido. Por favor intenta de nuevo.',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#EF4444'
+      });
+      
+      throw error;
+    }
   };
 
   // Show loading state
@@ -161,6 +278,32 @@ const OrdersHub = () => {
             </div>
           </div>
         </div>
+
+        {/* Alert for approved designs needing order completion */}
+        {approvedDesigns.length > 0 && (
+          <div className="approved-designs-alert">
+            <div className="alert-icon">⚠️</div>
+            <div className="alert-content">
+              <h4>Diseños Aprobados Pendientes</h4>
+              <p>
+                Tienes {approvedDesigns.length} diseño{approvedDesigns.length > 1 ? 's' : ''} aprobado{approvedDesigns.length > 1 ? 's' : ''} que necesita{approvedDesigns.length > 1 ? 'n' : ''} información adicional para crear el pedido.
+              </p>
+              <div className="approved-designs-list">
+                {approvedDesigns.map(design => (
+                  <div key={design._id} className="approved-design-item">
+                    <span className="design-name">{design.name || 'Sin nombre'}</span>
+                    <button 
+                      onClick={() => handleCompleteOrder(design)}
+                      className="btn-complete-info"
+                    >
+                      Completar Información
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Estadísticas */}
         <div className="stats-grid-orders">
@@ -258,9 +401,18 @@ const OrdersHub = () => {
 
       <QuoteResponseModal
         isOpen={showQuoteModal}
-        onClose={() => setShowQuoteModal(false)}
-        order={selectedOrder}
-        onResponse={refreshOrders}
+        onClose={() => {
+          setShowQuoteModal(false);
+          // Refresh designs to check for newly approved designs
+          refreshDesigns();
+        }}
+        design={selectedOrder}
+        onSubmit={async (designId, accepted, notes) => {
+          // This will be handled by the useDesigns hook
+          console.log('📋 [OrdersHub] Quote response:', { designId, accepted, notes });
+          await refreshOrders();
+          await refreshDesigns();
+        }}
       />
 
       <QualityApprovalModal
@@ -268,6 +420,13 @@ const OrdersHub = () => {
         onClose={() => setShowQualityModal(false)}
         order={selectedOrder}
         onApproval={refreshOrders}
+      />
+
+      <CompleteOrderModal
+        isOpen={showCompleteOrderModal}
+        onClose={() => setShowCompleteOrderModal(false)}
+        design={selectedDesign}
+        onComplete={handleOrderComplete}
       />
 
       <Footer />

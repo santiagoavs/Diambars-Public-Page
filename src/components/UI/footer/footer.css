@@ -1,7 +1,9 @@
+/* ⚡ Optimized font loading with font-display: swap */
 @font-face {
   font-family: 'Mona Sans';
   src: url('/fonts/MonaSans.ttf') format('truetype');
   font-weight: 400;
+  font-display: swap; /* Show fallback font while loading */
   font-style: normal;
 }
 

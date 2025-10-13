@@ -1,24 +1,41 @@
+/* ⚡ Register CSS custom properties for smooth transitions */
+@property --dark-zone-opacity {
+  syntax: '<number>';
+  initial-value: 0;
+  inherits: false;
+}
+
+@property --light-zone-opacity {
+  syntax: '<number>';
+  initial-value: 0;
+}
+
 .home-page-wrapper {
   width: 100%;
   min-height: 100vh;
+  /* Original gradients - NO ANIMATION for better performance */
   background: 
     /* Zona oscura para el template de la T-Shirt */
-    radial-gradient(ellipse 120% 80% at 50% 65%, rgba(15, 25, 40, var(--dark-zone-opacity, 0)) 0%, rgba(25, 35, 50, var(--dark-zone-opacity, 0)) 30%, transparent 220%),
-    radial-gradient(ellipse 100% 60% at 30% 70%, rgba(35, 45, 65, var(--dark-zone-opacity, 0)) 0%, transparent 50%),
-    radial-gradient(ellipse 80% 50% at 70% 60%, rgba(20, 30, 45, var(--dark-zone-opacity, 0)) 0%, transparent 60%),
-    /* Zona clara para la sección de propuestas (después del 120%) */
-    radial-gradient(ellipse 100% 60% at 50% 130%, rgba(255, 246, 226, var(--light-zone-opacity, 0)) 0%, rgba(255, 235, 205, var(--light-zone-opacity, 0)) 40%, transparent 80%),
-    radial-gradient(ellipse 80% 50% at 30% 140%, rgba(255, 220, 200, var(--light-zone-opacity, 0)) 0%, transparent 60%),
-    radial-gradient(ellipse 90% 55% at 70% 135%, rgba(255, 240, 220, var(--light-zone-opacity, 0)) 0%, transparent 70%),
-    /* Gradientes originales del fondo */
+    radial-gradient(ellipse 120% 80% at 50% 65%, rgba(20, 30, 45, var(--dark-zone-opacity, 0)) 0%, rgba(25, 35, 50, var(--dark-zone-opacity, 0)) 30%, transparent 100%),
+    radial-gradient(ellipse 100% 70% at 50% 60%, rgba(15, 25, 40, calc(var(--dark-zone-opacity, 0) * 0.8)) 0%, rgba(20, 30, 45, calc(var(--dark-zone-opacity, 0) * 0.6)) 40%, transparent 90%),
+    radial-gradient(ellipse 90% 60% at 50% 65%, rgba(10, 20, 35, calc(var(--dark-zone-opacity, 0) * 0.9)) 0%, rgba(15, 25, 40, calc(var(--dark-zone-opacity, 0) * 0.7)) 35%, transparent 85%),
+    
+    /* Zona clara para la sección de propuestas */
+    radial-gradient(ellipse 100% 60% at 50% 130%, rgba(255, 240, 220, var(--light-zone-opacity, 0)) 0%, rgba(255, 235, 205, var(--light-zone-opacity, 0)) 40%, transparent 80%),
+    radial-gradient(ellipse 90% 50% at 50% 135%, rgba(255, 245, 230, calc(var(--light-zone-opacity, 0) * 0.7)) 0%, rgba(255, 238, 215, calc(var(--light-zone-opacity, 0) * 0.5)) 35%, transparent 75%),
+    radial-gradient(ellipse 80% 45% at 50% 140%, rgba(255, 250, 240, calc(var(--light-zone-opacity, 0) * 0.6)) 0%, rgba(255, 242, 225, calc(var(--light-zone-opacity, 0) * 0.4)) 30%, transparent 70%),
+    
+    /* Gradientes decorativos */
     radial-gradient(ellipse at 25% 15%, rgba(255, 246, 226, 0.8) 0%, transparent 45%),
     radial-gradient(ellipse at 85% 25%, rgba(255, 180, 160, 0.5) 0%, transparent 40%),
     radial-gradient(ellipse at 15% 70%, rgba(58, 151, 226, 0.4) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 85%, rgba(255, 246, 226, 0.8) 0%, transparent 95%),
-    radial-gradient(ellipse at 30% 85%, rgba(241, 205, 169, 0.8) 0%, transparent 95%),
-    radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, calc(0.7 - var(--dark-zone-opacity, 0) * 0.5)) 0%, transparent 35%),
-    radial-gradient(ellipse at 90% 60%, rgba(40, 80, 120, calc(0.7 - var(--light-zone-opacity, 0) * 0.5)) 0%, transparent 35%),
-    radial-gradient(ellipse at 45% 35%, rgba(220, 180, 190, 0.3) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 85%, rgba(241, 205, 169, 0.8) 0%, transparent 95%),
+    radial-gradient(ellipse at 40% 50%, rgba(255, 220, 180, 0.3) 0%, transparent 60%),
+    radial-gradient(ellipse at 60% 30%, rgba(173, 216, 230, 0.4) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 60%, rgba(255, 200, 150, 0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 80%, rgba(200, 230, 255, 0.4) 0%, transparent 65%),
+    
+    /* Base gradient */
     linear-gradient(135deg, 
       #FFF6E2 0%,
       #F5E7C6 20%,
@@ -34,14 +51,16 @@
     100% 100%,
     100% 100%,
     100% 100%,
-    140% 140%, 
-    130% 130%, 
-    160% 160%, 
-    135% 135%, 
-    125% 125%, 
-    180% 180%, 
+    140% 140%,
+    130% 130%,
+    160% 160%,
+    135% 135%,
+    150% 150%,
+    145% 145%,
+    155% 155%,
+    165% 165%,
     100% 100%;
-  animation: backgroundFlow 30s ease-in-out infinite alternate;
+  /* NO ANIMATION - Static background for performance */
   position: relative;
   overflow-x: hidden;
   display: flex;
@@ -53,10 +72,10 @@
 
 @keyframes backgroundFlow {
   0% {
-    background-position: 0% 0%, 20% 10%, 40% 30%, 60% 50%, 80% 70%, 100% 90%, 0% 0%;
+    background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 20% 10%, 40% 30%, 60% 50%, 0% 0%;
   }
   100% {
-    background-position: 10% 20%, 30% 40%, 50% 60%, 70% 80%, 90% 100%, 20% 10%, 100% 100%;
+    background-position: 2% 3%, 4% 6%, 3% 4%, 10% 20%, 10% 20%, 30% 40%, 50% 60%, 70% 80%, 100% 100%;
   }
 }
 
@@ -98,7 +117,9 @@
     position: relative;
     overflow: hidden;
     animation: fadeInUp 1s ease-out;
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* ⚡ Specific properties */
+    /* ⚡ GPU acceleration for transforms */
+    will-change: transform;
   }
   
   .hero-container:hover {
@@ -503,9 +524,14 @@
     display: flex;
     gap: 1.5rem;
     animation: heroCarouselMove 20s linear infinite;
+    /* ⚡ GPU acceleration */
     will-change: transform;
-    transform: translate3d( 0, 0, 0);
+    transform: translate3d(0, 0, 0);
     backface-visibility: hidden;
+    /* ⚡ Isolate layer for better performance */
+    contain: layout style;
+    /* ⚡ Enable layer isolation for better performance */
+    isolation: isolate;
   }
   
   .hero-carousel-track:hover {
@@ -798,18 +824,8 @@
 
 .tshirt-template {
   position: relative;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  transition: transform 0.3s ease;
-  opacity: 0;
-  transform: scale(0.8);
-  animation: fadeInScale 1.2s ease-out 0.6s forwards;
-  z-index: 2;
-}
-
-.tshirt-template:hover {
-  transform: scale(1.02);
+  width: 400px;
+  height: 500px;
 }
 
 .tshirt-base {
@@ -831,6 +847,8 @@
   width: 60%;
   height: 40%;
   z-index: 2;
+  /* ⚡ Optimize rendering */
+  contain: layout style;
 }
 
 .design-image {
@@ -841,27 +859,49 @@
   align-items: center;
   object-fit: contain;
   opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-  animation: designPulse 1s ease-in-out;
+  /* ⚡ Faster transition to prevent overlap */
+  transition: opacity 0.4s ease-in-out;
+  /* ⚡ GPU acceleration */
   will-change: opacity, transform;
+  transform: translateZ(0) scale(0.95);
+  backface-visibility: hidden;
+  /* ⚡ Hide when not active */
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .design-image.active {
   opacity: 1;
-  transform: scale(1);
+  transform: translateZ(0) scale(1);
+  /* ⚡ Show when active */
+  visibility: visible;
+  /* ⚡ Smooth scale animation */
+  animation: designFadeIn 0.6s ease-out forwards;
+}
+
+/* ⚡ Smooth fade-in animation for t-shirt designs */
+@keyframes designFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateZ(0) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+  }
 }
 
 @keyframes designPulse {
   0% {
-    transform: scale(0.9);
+    transform: translateZ(0) scale(0.9);
     opacity: 0;
   }
   50% {
-    transform: scale(1.05);
+    transform: translateZ(0) scale(1.05);
     opacity: 0.8;
   }
   100% {
-    transform: scale(1);
+    transform: translateZ(0) scale(1);
     opacity: 1;
   }
 }

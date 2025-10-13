@@ -1,0 +1,632 @@
+/* components/orders/completeOrderModal.css */
+
+.complete-order-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.complete-order-modal {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  box-shadow: 
+    0 24px 64px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== HEADER ==================== */
+.complete-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 1rem;
+}
+
+.complete-order-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3F2724;
+  margin: 0 0 0.25rem;
+  font-family: 'Mona Sans', sans-serif;
+}
+
+.complete-order-header p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.close-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  color: #EF4444;
+}
+
+.close-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: scale(1.05);
+}
+
+/* ==================== STEPPER ==================== */
+.order-stepper {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+  gap: 0.5rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  flex: 1;
+  min-width: fit-content;
+}
+
+.step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(200, 200, 200, 0.2);
+  border: 2px solid rgba(200, 200, 200, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.step-item.active .step-icon {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3B82F6;
+  color: #3B82F6;
+}
+
+.step-item.completed .step-icon {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10B981;
+  color: #10B981;
+}
+
+.step-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #999;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.step-item.active .step-label {
+  color: #3B82F6;
+}
+
+.step-item.completed .step-label {
+  color: #10B981;
+}
+
+.step-connector {
+  flex: 1;
+  height: 2px;
+  background: rgba(200, 200, 200, 0.3);
+  margin: 0 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.step-item.completed .step-connector {
+  background: #10B981;
+}
+
+/* ==================== CONTENT ==================== */
+.complete-order-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.step-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #3F2724;
+  margin: 0 0 0.5rem;
+  font-family: 'Mona Sans', sans-serif;
+}
+
+.step-description {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0 0 2rem;
+}
+
+/* ==================== DELIVERY OPTIONS ==================== */
+.delivery-options {
+  display: grid;
+  gap: 1rem;
+}
+
+.delivery-option {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(241, 249, 255, 0.3);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.delivery-option:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 8px 24px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.delivery-option.selected {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: #3B82F6;
+  box-shadow: 
+    0 8px 24px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.option-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3B82F6;
+  flex-shrink: 0;
+}
+
+.delivery-option.selected .option-icon {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-content h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #3F2724;
+  margin: 0 0 0.5rem;
+}
+
+.option-content p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.option-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ==================== INFO MESSAGE ==================== */
+.info-message {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  color: #3B82F6;
+}
+
+.info-message h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: #3B82F6;
+}
+
+.info-message p {
+  font-size: 0.9rem;
+  margin: 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* ==================== ADDRESS PLACEHOLDER ==================== */
+.address-placeholder {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(241, 249, 255, 0.3);
+  border: 2px dashed rgba(59, 130, 246, 0.3);
+  border-radius: 16px;
+  color: #666;
+}
+
+.address-placeholder svg {
+  color: #3B82F6;
+  margin-bottom: 1rem;
+}
+
+.address-placeholder h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #3F2724;
+  margin: 0 0 0.5rem;
+}
+
+.address-placeholder p {
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
+  line-height: 1.5;
+}
+
+.placeholder-note {
+  font-size: 0.85rem !important;
+  color: #999 !important;
+  font-style: italic;
+  margin-top: 1rem !important;
+}
+
+/* ==================== PAYMENT METHODS ==================== */
+.payment-methods {
+  display: grid;
+  gap: 1rem;
+}
+
+.payment-method {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: rgba(241, 249, 255, 0.3);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.payment-method:hover:not(.disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 8px 24px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.payment-method.selected {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: #3B82F6;
+  box-shadow: 
+    0 8px 24px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.payment-method.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.payment-icon {
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.payment-method.selected .payment-icon {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.payment-info {
+  flex: 1;
+}
+
+.payment-info h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #3F2724;
+  margin: 0 0 0.5rem;
+}
+
+.payment-info p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+}
+
+.payment-note {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #F59E0B;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ==================== CONFIRMATION ==================== */
+.confirmation-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.summary-section {
+  padding: 1.5rem;
+  background: rgba(241, 249, 255, 0.3);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.summary-section h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #3F2724;
+  margin: 0 0 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.item-label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.item-value {
+  font-size: 0.9rem;
+  color: #3F2724;
+  font-weight: 600;
+  text-align: right;
+}
+
+.confirmation-note {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+}
+
+.confirmation-note p {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ==================== FOOTER ==================== */
+.complete-order-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 0 0 24px 24px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: 'Mona Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+}
+
+.btn-primary {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 
+    0 6px 25px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-complete {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.btn-complete:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 
+    0 6px 25px rgba(16, 185, 129, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(107, 114, 128, 0.15);
+  border-color: rgba(107, 114, 128, 0.3);
+  box-shadow: 
+    0 6px 25px rgba(107, 114, 128, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .complete-order-modal {
+    max-height: 95vh;
+    border-radius: 20px 20px 0 0;
+    margin-top: auto;
+  }
+
+  .complete-order-header {
+    padding: 1.5rem;
+  }
+
+  .complete-order-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .order-stepper {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .step-label {
+    display: none;
+  }
+
+  .step-item {
+    flex: 0 0 auto;
+  }
+
+  .complete-order-content {
+    padding: 1.5rem;
+  }
+
+  .delivery-option,
+  .payment-method {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .option-icon,
+  .payment-icon {
+    margin: 0 auto;
+  }
+
+  .complete-order-footer {
+    padding: 1rem 1.5rem;
+    flex-direction: column-reverse;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}

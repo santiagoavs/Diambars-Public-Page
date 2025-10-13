@@ -263,7 +263,7 @@ const QuoteResponseModal = ({
                   onChange={() => handleDecisionChange('accept')}
                 />
                 <div className="option-content accept">
-                  <span className="option-icon">
+                  <span className="option-icon-response">
                     <CheckCircle size={40} weight="duotone" color="#10B981" />
                   </span>
                   <div className="option-text">
@@ -286,7 +286,7 @@ const QuoteResponseModal = ({
                   onChange={() => handleDecisionChange('reject')}
                 />
                 <div className="option-content reject">
-                  <span className="option-icon">
+                  <span className="option-icon-response">
                     <XCircle size={40} weight="duotone" color="#EF4444" />
                   </span>
                   <div className="option-text">

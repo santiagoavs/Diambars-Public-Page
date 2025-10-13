@@ -1,4 +1,6 @@
 import { Routes, Route, useSearchParams, Navigate } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './config/queryClient';
 import Navbar from './components/UI/navBar/navBar';
 import Home from './pages/home/home'
 import Catalogue from './pages/catalogue/catalogue'
@@ -29,7 +31,7 @@ const DesignHubWithProduct = () => {
 
 function App() {
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <Navbar />
         <Routes>
           {/* Rutas existentes - SIN CAMBIOS */}
@@ -95,7 +97,7 @@ function App() {
             } 
           />
         </Routes>
-    </>
+    </QueryClientProvider>
   );
 }
 
