@@ -1,10 +1,26 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/images/logo-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Diambars Sublim</title>
+    
+    <!-- ⚡ Performance: Resource Hints -->
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="/fonts/MonaSans.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/AestheticMoment.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+    
+    <!-- Preload hero logo (LCP optimization) -->
+    <link rel="preload" href="/images/navbar/Logo-2.png" as="image" fetchpriority="high" />
+    
+    <!-- DNS prefetch for external resources (if any) -->
+    <link rel="dns-prefetch" href="https://expo2025-8bjn.onrender.com" />
+    
+    <!-- Preconnect to backend API -->
+    <link rel="preconnect" href="https://expo2025-8bjn.onrender.com" crossorigin />
+    
+    <title>Diambars Sublim - Personaliza tus productos</title>
+    <meta name="description" content="Crea productos personalizados con Diambars Sublim. Diseña camisetas, tazas y más con nuestro editor profesional." />
   </head>
   <body>
     <div id="root"></div>

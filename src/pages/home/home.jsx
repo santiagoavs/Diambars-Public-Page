@@ -22,7 +22,7 @@ const HeroContent = memo(({ onNavigate }) => (
       className="hero-cta-button" 
       onClick={onNavigate}
     >
-      <svg className="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="cta-icon" fill="none" stroke="currentColor" viewBox="0 0 30 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
       </svg>
       <span>Explorar catálogo</span>
@@ -157,11 +157,20 @@ export default function Home() {
     };
   }, [switchingImages.length]);
 
+  // ⚡ Optimization: Cache pageWrapper reference
+  const pageWrapperRef = useRef(null);
+  
   // Original scroll handler
   const handleScroll = useCallback(() => {
     const tshirtSection = tshirtSectionRef.current;
     const sublimationSection = sublimationSectionRef.current;
-    const pageWrapper = document.querySelector('.home-page-wrapper');
+    
+    // ⚡ Use cached reference instead of querySelector
+    if (!pageWrapperRef.current) {
+      pageWrapperRef.current = document.querySelector('.home-page-wrapper');
+    }
+    const pageWrapper = pageWrapperRef.current;
+    
     if (!tshirtSection || !sublimationSection || !pageWrapper) return;
     
     const tshirtRect = tshirtSection.getBoundingClientRect();
@@ -227,7 +236,7 @@ export default function Home() {
     }
   }, []);
 
-  // Original parallax scroll listener
+  // Original parallax scroll listener (Step 2 reverted, keeping Step 1)
   useEffect(() => {
     let ticking = false;
     let scrollAnimationId = null;

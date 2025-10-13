@@ -70,25 +70,9 @@
   font-family: 'Mona Sans', sans-serif;
 }
 
-@keyframes backgroundFlow {
-  0% {
-    background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 20% 10%, 40% 30%, 60% 50%, 0% 0%;
-  }
-  100% {
-    background-position: 2% 3%, 4% 6%, 3% 4%, 10% 20%, 10% 20%, 30% 40%, 50% 60%, 70% 80%, 100% 100%;
-  }
-}
+/* ⚡ Removed unused animations: backgroundFlow, lightWaveBackground */
 
-@keyframes lightWaveBackground {
-  0%, 100% {
-    background-position: 0% 0%;
-  }
-  50% {
-    background-position: 100% 100%;
-  }
-}
-
-  /* Hero Section */
+/* Hero Section */
   .hero-section {
     width: 100%;
     display: flex;
@@ -117,9 +101,8 @@
     position: relative;
     overflow: hidden;
     animation: fadeInUp 1s ease-out;
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* ⚡ Specific properties */
-    /* ⚡ GPU acceleration for transforms */
-    will-change: transform;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    /* ⚡ GPU acceleration - will-change removed, only use transform3d */
   }
   
   .hero-container:hover {
@@ -128,6 +111,7 @@
       0 12px 40px rgba(114, 175, 212, 0.2),
       0 4px 12px rgba(104, 159, 193, 0.2),
       inset 0 2px 0 rgba(255, 255, 255, 0.4);
+    will-change: transform; /* ⚡ Only during hover */
   }
   
   .hero-container::before {
@@ -236,7 +220,8 @@
       0 0 8px rgba(255, 255, 255, 0.3);
     text-decoration: none;
     animation: fadeInUp 1s ease-out, buttonPulse 4s ease-in-out infinite;
-    will-change: transform;
+    /* ⚡ will-change only during hover */
+    transform: translateZ(0);
     
     background: #3e6eac;
     backdrop-filter: blur(16px);
@@ -379,7 +364,7 @@
     animation: fadeInUp 1s ease-out var(--delay, 1s) both;
     position: relative;
     overflow: hidden;
-    will-change: transform;
+    /* ⚡ will-change removed - animation is one-time */
   }
   
   .content-card:nth-child(1) { --delay: 1s; }
@@ -690,7 +675,7 @@
   transform: translateY(-30px);
   animation: fadeInUp 1s ease-out 0.2s forwards;
   transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
-  will-change: background, text-shadow;
+  /* ⚡ will-change removed - only transitions on scroll */
 }
 
 .tshirt-subtitle {
@@ -702,7 +687,7 @@
   transform: translateY(-20px);
   animation: fadeInUp 1s ease-out 0.4s forwards;
   transition: color 0.6s cubic-bezier(0.4, 0.0, 0.2, 1), text-shadow 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
-  will-change: color, text-shadow;
+  /* ⚡ will-change removed - only transitions on scroll */
 }
 
 .tshirt-customization-area {
@@ -783,7 +768,7 @@
   position: relative;
   filter: drop-shadow(0 2px 4px rgba(30, 58, 95, 0.2));
   animation: subtleBreathing 6s ease-in-out infinite;
-  will-change: background, filter, text-decoration-color;
+  /* ⚡ will-change on hover only */
 }
 
 .custom-text-item:hover {
@@ -794,6 +779,7 @@
   transform: translateX(8px);
   font-size: 1.9rem;
   filter: drop-shadow(0 3px 6px rgba(44, 82, 130, 0.3));
+  will-change: transform, filter; /* ⚡ Only during hover */
   animation: none;
 }
 
@@ -1222,7 +1208,7 @@
     0 0 8px rgba(255, 255, 255, 0.3);
   text-decoration: none;
   animation: fadeInUp 1s ease-out 0.6s both;
-  will-change: transform;
+  /* ⚡ will-change removed - one-time animation */
   margin-top: 1rem;
   
   background: linear-gradient(135deg, #E5446D 0%, #8B1538 100%);
