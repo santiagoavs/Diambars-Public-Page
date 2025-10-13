@@ -157,20 +157,11 @@ export default function Home() {
     };
   }, [switchingImages.length]);
 
-  // ⚡ Optimization: Cache pageWrapper reference
-  const pageWrapperRef = useRef(null);
-  
   // Original scroll handler
   const handleScroll = useCallback(() => {
     const tshirtSection = tshirtSectionRef.current;
     const sublimationSection = sublimationSectionRef.current;
-    
-    // ⚡ Use cached reference instead of querySelector
-    if (!pageWrapperRef.current) {
-      pageWrapperRef.current = document.querySelector('.home-page-wrapper');
-    }
-    const pageWrapper = pageWrapperRef.current;
-    
+    const pageWrapper = document.querySelector('.home-page-wrapper');
     if (!tshirtSection || !sublimationSection || !pageWrapper) return;
     
     const tshirtRect = tshirtSection.getBoundingClientRect();
@@ -236,7 +227,7 @@ export default function Home() {
     }
   }, []);
 
-  // Original parallax scroll listener (Step 2 reverted, keeping Step 1)
+  // Original parallax scroll listener
   useEffect(() => {
     let ticking = false;
     let scrollAnimationId = null;
