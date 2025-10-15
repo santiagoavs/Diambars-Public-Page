@@ -23,7 +23,6 @@ export default function VerifyEmailPage() {
       console.log('[VerifyEmailPage] Enviando correo automáticamente');
       console.log('[VerifyEmailPage] Email:', email);
       console.log('[VerifyEmailPage] fromLogin:', fromLogin);
-      console.log('[VerifyEmailPage] state completo:', state);
       
       const sendVerificationEmail = async () => {
         try {
@@ -38,7 +37,8 @@ export default function VerifyEmailPage() {
 
       sendVerificationEmail();
     }
-  }, [fromLogin, email, state]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleResendEmail = async () => {
     console.log('[VerifyEmailPage] Reenvío manual solicitado');

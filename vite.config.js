@@ -22,7 +22,7 @@ export default defineConfig(({ command, mode }) => {
   console.log(`🎯 [Vite] Proxy target: ${proxyTarget}`);
 
   return {
-    base: './',
+    base: '/',
     plugins: [react()],
     server: {
       proxy: {
