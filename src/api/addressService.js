@@ -9,42 +9,25 @@ export const addressService = {
       const response = await apiClient.get('/addresses');
       
       console.log('✅ [addressService] Respuesta completa:', response);
-      console.log('📊 [addressService] Tipo de response:', typeof response);
-      console.log('📋 [addressService] Keys de response:', Object.keys(response));
       
-      // Manejar diferentes estructuras de respuesta
-      if (response.data && response.data.addresses) {
-        console.log('📍 [addressService] Direcciones en response.data.addresses:', response.data.addresses);
-        return response.data;
-      } else if (response.addresses) {
-        console.log('📍 [addressService] Direcciones en response.addresses:', response.addresses);
+      // El backend devuelve { success: true, data: { addresses, deliveryFees } }
+      if (response.success && response.data) {
+        console.log('📍 [addressService] Direcciones encontradas:', {
+          addresses: response.data.addresses,
+          count: response.data.addresses?.length || 0,
+          deliveryFees: response.data.deliveryFees
+        });
         return response;
-      } else if (Array.isArray(response.data)) {
-        console.log('📍 [addressService] Direcciones como array en response.data:', response.data);
-        return {
-          success: true,
-          data: {
-            addresses: response.data,
-            deliveryFees: {}
-          }
-        };
-      } else if (Array.isArray(response)) {
-        console.log('📍 [addressService] Direcciones como array directo:', response);
-        return {
-          success: true,
-          data: {
-            addresses: response,
-            deliveryFees: {}
-          }
-        };
       } else {
-        console.log('⚠️ [addressService] Estructura de respuesta no reconocida:', response);
-        return response;
+        console.warn('⚠️ [addressService] Respuesta sin success o data:', response);
+        return {
+          success: false,
+          data: { addresses: [], deliveryFees: {} },
+          message: 'Error en la respuesta del servidor'
+        };
       }
     } catch (error) {
       console.error('❌ [addressService] Error obteniendo direcciones:', error);
-      console.error('📊 [addressService] Error status:', error.response?.status);
-      console.error('📋 [addressService] Error data:', error.response?.data);
       throw new Error(
         error.response?.data?.message || 'Error al obtener direcciones'
       );
@@ -55,6 +38,12 @@ export const addressService = {
   createAddress: async (addressData) => {
     try {
       console.log('🏠 [addressService] Creando nueva dirección:', addressData);
+      
+      // Validar datos requeridos antes de enviar
+      if (!addressData.recipient || !addressData.phoneNumber || !addressData.department || !addressData.municipality || !addressData.address) {
+        throw new Error('Faltan campos requeridos para crear la dirección');
+      }
+      
       const response = await apiClient.post('/addresses', addressData);
       
       console.log('✅ [addressService] Dirección creada:', response.data);
@@ -208,6 +197,38 @@ export const addressService = {
       
       throw new Error(
         error.response?.data?.message || 'Error al obtener datos de ubicaciones'
+      );
+    }
+  },
+
+  // Establecer ubicación predeterminada desde coordenadas (para AddressMapPicker)
+  setDefaultLocationFromCoordinates: async (coordinatesData) => {
+    try {
+      console.log('🗺️ [addressService] Estableciendo ubicación predeterminada:', coordinatesData);
+      const response = await apiClient.post('/addresses/set-default-location', coordinatesData);
+      
+      console.log('✅ [addressService] Ubicación predeterminada establecida');
+      return response.data;
+    } catch (error) {
+      console.error('❌ [addressService] Error estableciendo ubicación predeterminada:', error);
+      throw new Error(
+        error.response?.data?.message || 'Error al establecer ubicación predeterminada'
+      );
+    }
+  },
+
+  // Detectar direcciones duplicadas
+  detectDuplicates: async (addressData) => {
+    try {
+      console.log('🔍 [addressService] Detectando direcciones duplicadas:', addressData);
+      const response = await apiClient.post('/addresses/detect-duplicates', addressData);
+      
+      console.log('✅ [addressService] Detección de duplicados completada');
+      return response.data;
+    } catch (error) {
+      console.error('❌ [addressService] Error detectando duplicados:', error);
+      throw new Error(
+        error.response?.data?.message || 'Error al detectar direcciones duplicadas'
       );
     }
   }

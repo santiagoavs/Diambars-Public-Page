@@ -30,6 +30,14 @@ export default defineConfig(({ command, mode }) => {
           target: proxyTarget,
           changeOrigin: true,
           secure: backendMode !== 'local',
+        },
+        '/nominatim': {
+          target: 'https://nominatim.openstreetmap.org',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/nominatim/, ''),
+          headers: {
+            'User-Agent': 'Diambars-Sublim-App/1.0'
+          }
         }
       }
     },

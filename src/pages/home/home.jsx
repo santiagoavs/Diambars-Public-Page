@@ -288,7 +288,15 @@ export default function Home() {
     setSublimationMessage('');
 
     try {
-      const response = await fetch('https://expo2025-8bjn.onrender.com/api/contact/send', {
+        // Determine backend URL based on VITE_BACKEND_MODE
+      const backendMode = import.meta.env.VITE_BACKEND_MODE;
+      const baseURL = backendMode === 'local' 
+        ? 'http://localhost:4000/api' 
+        : 'https://expo2025-8bjn.onrender.com/api';
+      
+      console.log('📋 [Sublimation Form] Using backend:', baseURL);
+      
+      const response = await fetch(`${baseURL}/contact/request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

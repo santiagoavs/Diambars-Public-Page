@@ -19,7 +19,7 @@ const Profile = () => {
       console.log('🔄 [Profile] Refrescando datos del usuario en perfil');
       refreshUser();
     }
-  }, []); // Empty deps - only run on mount, refreshUser has its own logout protection
+  }, [isAuthenticated]); // Remover refreshUser de las dependencias para evitar bucle
 
   if (!user) {
     //Si no está autenticado, mostramos el login

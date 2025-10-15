@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './modal.css';
 
-const Modal = ({ isOpen, onClose, children }) => {
+const Modal = ({ isOpen, onClose, children, className = '' }) => {
   useEffect(() => {
     if (isOpen) {
       // Prevenir scroll del body
@@ -47,7 +47,7 @@ const Modal = ({ isOpen, onClose, children }) => {
   // Usar createPortal para renderizar el modal directamente en body
   return createPortal(
     <div 
-      className="modal-backdrop" 
+      className={`modal-backdrop ${className}`} 
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"

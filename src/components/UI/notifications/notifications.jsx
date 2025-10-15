@@ -6,12 +6,19 @@ import './notifications.css';
 
 export default function Notifications() {
   const { isAuthenticated } = useAuth();
-  const { needsResponseDesigns } = useDesigns();
+  const { needsResponseDesigns, fetchUserDesigns } = useDesigns();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [readNotifications, setReadNotifications] = useState(new Set());
   const notificationsRef = useRef(null);
   const navigate = useNavigate();
+
+  // Cargar diseños solo cuando el usuario esté autenticado y el dropdown esté abierto
+  useEffect(() => {
+    if (isAuthenticated && isOpen) {
+      fetchUserDesigns({ includeDetails: true, limit: 50 });
+    }
+  }, [isAuthenticated, isOpen, fetchUserDesigns]);
 
   // Actualiza el contador de notificaciones no leidas
   useEffect(() => {

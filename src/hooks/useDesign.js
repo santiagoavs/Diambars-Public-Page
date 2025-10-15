@@ -100,7 +100,7 @@ const useDesigns = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, formatDesign, handleError]);
+  }, [isAuthenticated]); // Simplificar dependencias para evitar recreación constante
 
   // Crear nuevo diseño
   const createDesign = useCallback(async (designData) => {
@@ -464,7 +464,7 @@ const useDesigns = () => {
       setDesigns([]);
       setError(null);
     }
-  }, [isAuthenticated, user, fetchUserDesigns]);
+  }, [isAuthenticated, user]); // Remover fetchUserDesigns de las dependencias para evitar bucle
 
   // Limpiar error después de un tiempo
   useEffect(() => {

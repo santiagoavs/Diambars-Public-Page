@@ -8,6 +8,15 @@ export const useAddresses = () => {
   const [locationData, setLocationData] = useState({ departments: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estados adicionales para funcionalidades avanzadas
+  const [selectedAddresses, setSelectedAddresses] = useState([]);
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    default: 0
+  });
 
   // Cargar direcciones del usuario
   const loadAddresses = useCallback(async () => {
@@ -26,23 +35,43 @@ export const useAddresses = () => {
           addresses: response.data.addresses,
           count: response.data.addresses?.length || 0
         });
-        setAddresses(response.data.addresses || []);
+        
+        const addressesList = response.data.addresses || [];
+        setAddresses(addressesList);
         setDeliveryFees(response.data.deliveryFees || {});
+        
+        // Calcular estadísticas
+        updateStatistics(addressesList);
       } else if (response.addresses) {
         // Fallback si la estructura es diferente
         console.log('🔄 [useAddresses] Usando estructura alternativa:', response.addresses);
-        setAddresses(response.addresses || []);
+        const addressesList = response.addresses || [];
+        setAddresses(addressesList);
+        updateStatistics(addressesList);
       } else {
         console.warn('⚠️ [useAddresses] No se encontraron direcciones en la respuesta');
         setAddresses([]);
+        updateStatistics([]);
       }
     } catch (err) {
       console.error('❌ [useAddresses] Error cargando direcciones:', err);
       setError(err.message);
       setAddresses([]); // Asegurar que sea array vacío en caso de error
+      updateStatistics([]);
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  // Actualizar estadísticas de direcciones
+  const updateStatistics = useCallback((addressesList) => {
+    const stats = {
+      total: addressesList.length,
+      active: addressesList.filter(addr => addr.isDefault).length,
+      inactive: addressesList.filter(addr => !addr.isDefault).length,
+      default: addressesList.filter(addr => addr.isDefault).length
+    };
+    setStatistics(stats);
   }, []);
 
   // Cargar datos de ubicaciones
@@ -197,6 +226,41 @@ export const useAddresses = () => {
     return department?.deliveryFee || deliveryFees.defaultFee || 0;
   };
 
+  // Funciones de selección
+  const toggleAddressSelection = useCallback((addressId) => {
+    setSelectedAddresses(prev => {
+      if (prev.includes(addressId)) {
+        return prev.filter(id => id !== addressId);
+      } else {
+        return [...prev, addressId];
+      }
+    });
+  }, []);
+
+  const selectAllAddresses = useCallback(() => {
+    setSelectedAddresses(addresses.map(addr => addr._id));
+  }, [addresses]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedAddresses([]);
+  }, []);
+
+  // Funciones de estadísticas
+  const getCalculatedStats = useCallback(() => {
+    return {
+      total: addresses.length,
+      active: addresses.filter(addr => addr.isDefault).length,
+      inactive: addresses.filter(addr => !addr.isDefault).length,
+      default: addresses.filter(addr => addr.isDefault).length,
+      selected: selectedAddresses.length
+    };
+  }, [addresses, selectedAddresses]);
+
+  // Funciones de utilidad
+  const hasAddresses = addresses.length > 0;
+  const isEmpty = addresses.length === 0;
+  const defaultAddress = addresses.find(addr => addr.isDefault);
+
   // Cargar datos iniciales
   useEffect(() => {
     loadAddresses();
@@ -210,8 +274,10 @@ export const useAddresses = () => {
     locationData,
     isLoading,
     error,
+    selectedAddresses,
+    statistics,
     
-    // Acciones
+    // Acciones principales
     loadAddresses,
     createAddress,
     updateAddress,
@@ -219,12 +285,19 @@ export const useAddresses = () => {
     setDefaultAddress,
     validateAddress,
     
+    // Acciones de selección
+    toggleAddressSelection,
+    selectAllAddresses,
+    clearSelection,
+    
     // Utilidades
     getMunicipalitiesForDepartment,
     getDeliveryFeeForDepartment,
+    getCalculatedStats,
     
     // Estado derivado
-    defaultAddress: addresses.find(addr => addr.isDefault),
-    hasAddresses: addresses.length > 0
+    defaultAddress,
+    hasAddresses,
+    isEmpty
   };
 };
