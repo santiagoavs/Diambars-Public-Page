@@ -42,7 +42,7 @@
   margin-bottom: 30px;
 }
 
-.payment-method {
+.payment-method-selection {
   border: 2px solid #e9ecef;
   border-radius: 12px;
   padding: 20px;
@@ -51,12 +51,12 @@
   background: #fff;
 }
 
-.payment-method:hover {
+.payment-method-selection:hover {
   border-color: #007bff;
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
 }
 
-.payment-method.selected {
+.payment-method-selection.selected {
   border-color: #007bff;
   background: #f8f9ff;
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);

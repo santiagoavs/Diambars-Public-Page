@@ -163,7 +163,7 @@ const PaymentSelection = ({
     return (
       <div 
         key={method.type}
-        className={`payment-method ${isSelected ? 'selected' : ''}`}
+        className={`payment-method-selection ${isSelected ? 'selected' : ''}`}
         onClick={() => handleMethodSelect(method)}
       >
         <div className="method-header">

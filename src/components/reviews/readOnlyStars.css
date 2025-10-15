@@ -12,3 +12,12 @@
 .readonly-star.active {
   color: #3F2724;
 }
+
+@media (max-width: 768px) {
+  .readonly-star {
+    font-size: 1rem;
+  }
+}
+
+
+  

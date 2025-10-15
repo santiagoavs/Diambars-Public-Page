@@ -168,9 +168,17 @@
 
 @media (max-width: 768px) {
   .review-card {
-    width: 100%;
+    width: 90%;
     padding: 1rem;
     font-size: 0.9rem;
+  }
+
+  .review-user-top {
+    gap: 5px;
+  }
+
+  .review-stars {
+    margin-left: 300px;
   }
 
   .review-header {
@@ -196,10 +204,30 @@
   }
 }
 
+@media (max-width: 665px) {
+  .review-username {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 585px) {
+  .review-user-top {
+    gap: 0;
+  }
+
+  .review-stars {
+    margin-left: 200px;
+  }
+}
+
 @media (max-width: 480px) {
   .review-card {
     padding: 0.8rem;
     font-size: 0.85rem;
+  }
+
+  .review-stars {
+    margin-left: 100px;
   }
 
   .review-author {
@@ -218,3 +246,10 @@
     font-size: 0.85rem;
   }
 }
+
+@media (max-width: 370px) {
+  .review-stars {
+    margin-left: 25px;
+  }
+}
+  

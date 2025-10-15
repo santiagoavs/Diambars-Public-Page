@@ -353,11 +353,6 @@
   flex: 1;
 }
 
-.form-row {
-  display: flex;
-  gap: 15px;
-}
-
 .card-input {
   position: relative;
   padding: 12px;
@@ -421,102 +416,6 @@
   font-style: italic;
 }
 
-.modal-save-btn {
-  position: relative;
-  border: none;
-  border-radius: 15px;
-  padding: 10px 20px;
-  width: 245px;
-  height: 50px;
-  font-family: 'Mona Sans', sans-serif;
-  font-size: 1rem;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-self: center;
-  align-items: center;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  overflow: hidden;
-  z-index: 1;
-  color: #FFF1D0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-
-  background: rgba(22, 120, 3, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 
-    0 4px 20px rgba(8, 50, 0, 0.2),
-    0 0 0 1px rgba(180, 255, 180, 0.3);
-}
-
-.modal-save-btn:before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(30, 180, 50, 0.6), rgba(0, 100, 15, 0.9));
-  transform: translateY(5px) scale(0.95);
-  filter: blur(6px);
-  opacity: 0.8;
-}
-
-.modal-buttons {
-  display: flex;
-  gap: 14px;
-  margin-top: 10px;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-delete-btn {
-  position: relative;
-  border: none;
-  border-radius: 15px;
-  padding: 15px 30px;
-  width: 245px;
-  font-family: 'Mona Sans', sans-serif;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  overflow: hidden;
-  z-index: 1;
-  color: #FFF1D0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  background: rgba(160, 0, 25, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 
-    0 4px 20px rgba(160, 0, 25, 0.3),
-    0 0 0 1px rgba(255, 180, 180, 0.3);
-  flex: 1;
-}
-
-.modal-delete-btn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(180, 30, 50, 0.7), rgba(100, 0, 15, 0.9));
-  transform: translateY(5px) scale(0.95);
-  filter: blur(6px);
-  opacity: 0.8;
-}
-
-.modal-save-btn:hover,
-.modal-delete-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 6px 25px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.4);
-}
-
-.modal-save-btn:active,
-.modal-delete-btn:active {
-  transform: translateY(1px);
-}
-
 .rccs {
   width: 500px;
 }
@@ -550,10 +449,6 @@
     width: 350px;
     height: 200px;
   }
-  .modal-save-btn,
-  .modal-delete-btn {
-    width: 200px;
-  }
   .btn-add {
     width: 80px;
     font-size: 0.75rem;
@@ -581,11 +476,6 @@
   .modal-buttons {
     flex-direction: column;
     gap: 10px;
-  }
-  .modal-save-btn,
-  .modal-delete-btn {
-    width: 100%;
-    max-width: 200px;
   }
   .btn-add {
     width: 70px;
@@ -619,12 +509,6 @@
     padding: 10px;
     font-size: 0.9rem;
   }
-  .modal-save-btn,
-  .modal-delete-btn {
-    max-width: 180px;
-    font-size: 0.9rem;
-    padding: 12px 20px;
-  }
   .btn-add {
     width: 65px;
     font-size: 0.65rem;
@@ -653,12 +537,6 @@
     padding: 8px;
     font-size: 0.85rem;
   }
-  .modal-save-btn,
-  .modal-delete-btn {
-    max-width: 160px;
-    font-size: 0.85rem;
-    padding: 10px 16px;
-  }
   .btn-add {
     width: 60px;
     height: 30px;
@@ -674,3 +552,398 @@
   }
 }
 
+/* ==================== NEW MODAL STYLES (REDESIGNED) ==================== */
+
+.payment-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(43, 43, 43, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.payment-modal-content {
+  position: relative;
+  font-family: 'Mona Sans', sans-serif;
+  background: linear-gradient(135deg, 
+  rgba(255, 245, 237, 0.45) 0%, 
+  rgba(234, 225, 206, 0.35) 50%, 
+  rgba(232, 227, 218, 0.35) 100%);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1rem;
+  border-top: none;
+  box-shadow: 0 12px 40px rgba(206, 206, 206, 0.03),
+              0 4px 12px rgba(202, 202, 202, 0.03),
+              inset 0 2px 0 rgba(255, 255, 255, 0.4);
+  width: 100%;
+  max-width: 42rem;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.3s ease-out;
+  transition: all 0.3s ease;    
+  overflow: hidden;
+}
+
+  .payment-modal-content::-webkit-scrollbar {
+    width: 2px;
+  }
+  
+  .payment-modal-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .payment-modal-content::-webkit-scrollbar-thumb {
+    background: rgba(54, 54, 54, 0.3);
+    border-radius: 1px;
+    transition: background 0.3s ease;
+  }
+  
+  .payment-modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(54, 54, 54, 0.5);
+  }
+  
+  /* Para Firefox */
+  .payment-modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(49, 28, 28, 0.3) transparent;
+  }
+
+  @keyframes modalSlideIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.9) translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+.payment-modal-header {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
+    border-bottom: 1px solid #e5e5e5;
+    background: linear-gradient(170deg, 
+    rgba(255, 255, 255, 0.55) 0%, 
+    rgba(236, 237, 239, 0.58) 50%, 
+    rgba(226, 226, 226, 0.45) 100%); 
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.payment-modal-header h2 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #171717;
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.payment-modal-header p {
+  margin: 0;
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+.btn-close-modal {
+    height: 2rem;
+    width: 2rem;
+    margin-top: -0.25rem;
+    margin-right: -0.5rem;
+    display: flex;
+    align-items: center;
+    align-self: center;
+    justify-content: center;
+    border-radius: 100%;
+    background: rgba(255, 255, 255, 0.28);
+    border: 0.5px solid rgba(227, 227, 227, 0.2);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    color: #525252;
+}
+
+.btn-close-modal::before {
+      content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.1)
+    );
+    z-index: -1;
+    filter: blur(6px);
+    opacity: 0.1;
+}
+
+.btn-close-modal:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.payment-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(90vh - 140px);
+    background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.45) 0%, 
+    rgba(234, 234, 234, 0.55) 50%, 
+    rgba(231, 231, 231, 0.35) 100%);}
+
+/* Security/Info Notices */
+.security-notice,
+.info-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.security-notice {
+  background: rgba(203, 197, 12, 0.18);
+  border: 1px solid rgba(175, 162, 76, 0.3);
+}
+
+.info-notice {
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(33, 150, 243, 0.3);
+}
+
+.security-notice strong,
+.info-notice strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.security-notice p,
+.info-notice p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* Card Preview Container */
+.card-preview-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+/* Override original card-form for modal */
+.payment-modal-body .card-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  margin-top: 0;
+}
+
+/* Form Inputs for Modal */
+.payment-modal-body .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: none;
+}
+
+.payment-modal-body .form-row-payment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.payment-modal-body .form-input-payment {
+  width: 92%;
+  height: 1rem;
+  padding: 1rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  box-shadow: 
+    0 4px 20px rgba(227, 227, 227, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  color: #593D3B;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-input-payment.row {
+  width: 20%;
+}
+
+.form-input-payment:focus {
+  outline: none;
+  border-color: #3F2724;
+  box-shadow: 0 0 0 3px rgba(63, 39, 36, 0.1);
+}
+
+.form-input-payment.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* Submit Button */
+.btn-submit-method {
+  position: relative;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+  width: 100%;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(42, 103, 34, 0.4);
+  margin-top: 8px;
+  background: linear-gradient(270deg, 
+    rgba(34, 197, 94, 0.85) 0%, 
+    rgba(22, 163, 74, 0.88) 50%, 
+    rgba(21, 128, 61, 0.85) 100%);  
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 
+  0 8px 32px rgba(27, 68, 121, 0.2),
+  0 2px 8px rgba(74, 144, 226, 0.15),
+  inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: white;
+  transition: filter 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.btn-submit-method::before {
+      content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 250%;
+    height: 560%;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(30deg) translateX(-100%);
+    transition: all 0.6s ease;
+    z-index: -1;
+}
+
+.btn-submit-method:hover {
+    filter: brightness(1.1);
+    box-shadow: 
+    0 12px 40px rgba(27, 121, 30, 0.25),
+    0 4px 12px rgba(74, 226, 109, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-submit-method:hover::before {
+    transform: rotate(30deg) translateX(100%);
+}
+
+.btn-submit-method:active {
+  transform: translateY(0);
+}
+
+.btn-submit-method:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Form Actions (Edit Modal) */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-delete-card {
+  position: relative;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, sans-serif;
+  width: 40%;
+  padding: 14px 24px;
+  margin-top: 8px;
+  border-radius:10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(103, 34, 34, 0.4);
+  background: linear-gradient(270deg, 
+    rgba(197, 34, 34, 0.85) 0%, 
+    rgba(163, 22, 22, 0.88) 50%, 
+    rgba(128, 21, 21, 0.85) 100%);    
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-delete-card:hover {
+  background: #d32f2f;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+.btn-delete-card:active {
+  transform: translateY(0);
+}
+
+.btn-delete-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+  .payment-modal-content {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 95vh;
+  }
+
+  .payment-modal-header {
+    padding: 20px;
+  }
+
+  .payment-modal-body {
+    padding: 20px;
+  }
+
+  .payment-modal-body .form-row-payment {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-submit-method,
+  .btn-delete-card {
+    width: 100%;
+  }
+}

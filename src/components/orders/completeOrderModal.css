@@ -340,7 +340,7 @@
   gap: 1rem;
 }
 
-.payment-method {
+.payment-method-modal {
   display: flex;
   gap: 1.5rem;
   padding: 1.5rem;
@@ -356,7 +356,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.payment-method:hover:not(.disabled) {
+.payment-method-modal:hover:not(.disabled) {
   transform: translateY(-2px);
   border-color: rgba(59, 130, 246, 0.3);
   box-shadow: 
@@ -364,7 +364,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.payment-method.selected {
+.payment-method-modal.selected {
   background: rgba(59, 130, 246, 0.1);
   border-color: #3B82F6;
   box-shadow: 
@@ -372,7 +372,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-.payment-method.disabled {
+.payment-method-modal.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -389,7 +389,7 @@
   flex-shrink: 0;
 }
 
-.payment-method.selected .payment-icon {
+.payment-method-modal.selected .payment-icon {
   background: rgba(59, 130, 246, 0.15);
 }
 
@@ -629,4 +629,198 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* ==================== SAVED CARDS SECTION ==================== */
+.saved-cards-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.saved-cards-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.loading-cards,
+.no-cards-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 12px;
+}
+
+.no-cards-message {
+  background: rgba(255, 243, 205, 0.3);
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 193, 7, 0.5);
+}
+
+.saved-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.saved-card-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.saved-card-item:hover {
+  border-color: rgba(63, 39, 36, 0.3);
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.saved-card-item.selected {
+  border-color: #3F2724;
+  background: rgba(63, 39, 36, 0.05);
+}
+
+.saved-card-item.expired {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.saved-card-item.expired:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.card-radio {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.saved-card-item.selected .card-radio {
+  border-color: #3F2724;
+  background: #3F2724;
+  color: white;
+}
+
+.card-details-compact {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.default-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  background: rgba(255, 193, 7, 0.2);
+  color: #f57c00;
+  margin-left: auto;
+}
+
+.card-number-compact {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.card-expiry-compact {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.card-nickname-compact {
+  font-size: 12px;
+  padding: 4px 8px;
+  background: rgba(63, 39, 36, 0.1);
+  border-radius: 6px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.card-expired-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #d32f2f;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ==================== CVC INPUT SECTION ==================== */
+.cvc-input-section {
+  padding: 20px;
+  background: rgba(63, 39, 36, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(63, 39, 36, 0.1);
+}
+
+.cvc-input-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cvc-description {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.cvc-input {
+  width: 100%;
+  max-width: 200px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.cvc-input:focus {
+  outline: none;
+  border-color: #3F2724;
+  box-shadow: 0 0 0 3px rgba(63, 39, 36, 0.1);
+}
+
+.cvc-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.6;
 }

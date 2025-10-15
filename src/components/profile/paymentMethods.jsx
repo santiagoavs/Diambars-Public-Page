@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+// components/profile/PaymentMethods.jsx - Redesigned with designViewerModal structure
+import React, { useState, useCallback, useEffect } from 'react';
+import ReactDOM from 'react-dom';
+import { X, CreditCard, Plus, Edit2, Trash2, Star, Check, AlertCircle, AlertTriangle } from 'lucide-react';
 import Cards from 'react-credit-cards-2';
 import 'react-credit-cards-2/dist/es/styles-compiled.css';
 import './paymentMethods.css';
-import Modal from '../UI/modal/modal';
 import { usePaymentMethods } from '../../hooks/usePaymentMethods';
 import { useAuth } from '../../context/authContext';
+import Swal from 'sweetalert2';
 
 const PaymentMethods = () => {
   const { isAuthenticated } = useAuth();
@@ -34,7 +37,246 @@ const PaymentMethods = () => {
     focus: ''
   });
 
-  // Si no está autenticado, mostrar mensaje
+  // Block body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen || editingMethod) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isModalOpen, editingMethod]);
+
+  // ==================== HANDLERS ====================
+
+  const handleInputChange = useCallback((evt) => {
+    const { name, value } = evt.target;
+    
+    if (name === 'number') {
+      const formattedValue = value
+        .replace(/\s/g, '')
+        .replace(/(.{4})/g, '$1 ')
+        .trim()
+        .substring(0, 19);
+      setCardForm(prev => ({ ...prev, [name]: formattedValue }));
+    }
+    else if (name === 'expiry') {
+      const formattedValue = value
+        .replace(/\D/g, '')
+        .replace(/(\d{2})(\d)/, '$1/$2')
+        .substring(0, 5);
+      setCardForm(prev => ({ ...prev, [name]: formattedValue }));
+    }
+    else if (name === 'name') {
+      setCardForm(prev => ({ ...prev, [name]: value.toUpperCase().substring(0, 30) }));
+    }
+    else if (name === 'cvc') {
+      const formattedValue = value.replace(/\D/g, '').substring(0, 4);
+      setCardForm(prev => ({ ...prev, [name]: formattedValue }));
+    }
+    else if (name === 'nickname') {
+      setCardForm(prev => ({ ...prev, [name]: value.substring(0, 50) }));
+    }
+    else {
+      setCardForm(prev => ({ ...prev, [name]: value }));
+    }
+  }, []);
+
+  const handleInputFocus = useCallback((evt) => {
+    setCardForm(prev => ({ ...prev, focus: evt.target.name }));
+  }, []);
+
+  const resetForm = useCallback(() => {
+    setCardForm({
+      number: '',
+      name: '',
+      expiry: '',
+      cvc: '',
+      nickname: '',
+      focus: ''
+    });
+  }, []);
+
+  const handleAddMethod = async () => {
+    try {
+      setSubmitting(true);
+      clearError();
+      
+      await addPaymentMethod(cardForm);
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Tarjeta agregada',
+        text: 'Tu método de pago ha sido guardado exitosamente',
+        confirmButtonColor: '#3F2724',
+        timer: 3000,
+        timerProgressBar: true
+      });
+      
+      resetForm();
+      setIsModalOpen(false);
+    } catch (err) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message || 'Error agregando método de pago',
+        confirmButtonColor: '#3F2724'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditMethod = async () => {
+    try {
+      setSubmitting(true);
+      clearError();
+
+      const updateData = {
+        nickname: cardForm.nickname
+      };
+
+      await updatePaymentMethod(getCardId(editingMethod), updateData);
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Actualizado',
+        text: 'Método de pago actualizado exitosamente',
+        confirmButtonColor: '#3F2724',
+        timer: 2000,
+        timerProgressBar: true
+      });
+      
+      resetForm();
+      setEditingMethod(null);
+    } catch (err) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message || 'Error actualizando método de pago',
+        confirmButtonColor: '#3F2724'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteMethod = async (methodId) => {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: '¿Eliminar tarjeta?',
+      text: 'Esta acción no se puede deshacer',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      setSubmitting(true);
+      clearError();
+      
+      await deletePaymentMethod(methodId);
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Eliminada',
+        text: 'Método de pago eliminado exitosamente',
+        confirmButtonColor: '#3F2724',
+        timer: 2000,
+        timerProgressBar: true
+      });
+      
+      if (editingMethod && editingMethod._id === methodId) {
+        closeModal();
+      }
+    } catch (err) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message || 'Error eliminando método de pago',
+        confirmButtonColor: '#3F2724'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggleMethod = async (methodId, shouldActivate) => {
+    try {
+      setSubmitting(true);
+      clearError();
+      
+      await togglePaymentMethod(methodId, shouldActivate);
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Actualizado',
+        text: 'Tarjeta establecida como por defecto',
+        confirmButtonColor: '#3F2724',
+        timer: 2000,
+        timerProgressBar: true
+      });
+    } catch (err) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.message || 'Error actualizando método de pago',
+        confirmButtonColor: '#3F2724'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openEditModal = useCallback((method) => {
+    setEditingMethod(method);
+    setCardForm({
+      number: '1234 5678 9012 ' + (method.lastFour || method.lastFourDigits || method.last_four_digits || '****'),
+      name: method.cardHolderName || method.cardholderName || method.name || '',
+      expiry: `${method.expiryMonth || ''}/${method.expiryYear || ''}`,
+      cvc: '',
+      nickname: method.nickname || '',
+      focus: ''
+    });
+  }, []);
+
+  const closeModal = useCallback(() => {
+    resetForm();
+    setIsModalOpen(false);
+    setEditingMethod(null);
+  }, [resetForm]);
+
+  // ==================== UTILITY FUNCTIONS ====================
+
+  const formatDisplayNumber = (method) => {
+    return `**** **** **** ${method.lastFour || method.lastFourDigits || method.last_four_digits || '****'}`;
+  };
+
+  const formatCardBrand = (brand) => {
+    if (!brand || brand === 'unknown') return 'Tarjeta';
+    return brand.charAt(0).toUpperCase() + brand.slice(1);
+  };
+
+  const getCardStatus = (method) => {
+    return method.isDefault || method.active || false;
+  };
+
+  const getCardId = (method) => {
+    return method.id || method._id;
+  };
+
+  const getCardBrandIcon = (brand) => {
+    // You can replace with actual brand icons later
+    return <CreditCard size={24} />;
+  };
+
+  // ==================== RENDER ====================
+
   if (!isAuthenticated) {
     return (
       <div className="payment-container">
@@ -48,170 +290,6 @@ const PaymentMethods = () => {
       </div>
     );
   }
-
-  const handleInputChange = (evt) => {
-    const { name, value } = evt.target;
-    
-    // Formatear número de tarjeta con espacios
-    if (name === 'number') {
-      const formattedValue = value
-        .replace(/\s/g, '')
-        .replace(/(.{4})/g, '$1 ')
-        .trim()
-        .substring(0, 19); // Máximo 16 dígitos + 3 espacios
-      setCardForm(prev => ({ ...prev, [name]: formattedValue }));
-    }
-    // Formatear fecha de expiración
-    else if (name === 'expiry') {
-      const formattedValue = value
-        .replace(/\D/g, '')
-        .replace(/(\d{2})(\d)/, '$1/$2')
-        .substring(0, 5);
-      setCardForm(prev => ({ ...prev, [name]: formattedValue }));
-    }
-    // Nombre en mayúsculas
-    else if (name === 'name') {
-      setCardForm(prev => ({ ...prev, [name]: value.toUpperCase().substring(0, 30) }));
-    }
-    // CVC
-    else if (name === 'cvc') {
-      const formattedValue = value.replace(/\D/g, '').substring(0, 4);
-      setCardForm(prev => ({ ...prev, [name]: formattedValue }));
-    }
-    // Nickname normal
-    else if (name === 'nickname') {
-      setCardForm(prev => ({ ...prev, [name]: value.substring(0, 50) }));
-    }
-    else {
-      setCardForm(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleInputFocus = (evt) => {
-    setCardForm(prev => ({ ...prev, focus: evt.target.name }));
-  };
-
-  const resetForm = () => {
-    setCardForm({
-      number: '',
-      name: '',
-      expiry: '',
-      cvc: '',
-      nickname: '',
-      focus: ''
-    });
-  };
-
-  const handleAddMethod = async () => {
-    try {
-      setSubmitting(true);
-      clearError();
-      
-      await addPaymentMethod(cardForm);
-      
-      resetForm();
-      setIsModalOpen(false);
-    } catch (err) {
-      // El error ya está manejado en el hook, solo necesitamos mostrarlo
-      alert(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleEditMethod = async () => {
-    try {
-      setSubmitting(true);
-      clearError();
-
-      // Solo enviar datos que se pueden actualizar
-      const updateData = {
-        nickname: cardForm.nickname
-      };
-
-      await updatePaymentMethod(getCardId(editingMethod), updateData);
-      
-      resetForm();
-      setEditingMethod(null);
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDeleteMethod = async (methodId) => {
-    if (!confirm('¿Deseas eliminar este método de pago?')) {
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      clearError();
-      
-      await deletePaymentMethod(methodId);
-      
-      if (editingMethod && editingMethod._id === methodId) {
-        closeModal();
-      }
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleToggleMethod = async (methodId, shouldActivate) => {
-    try {
-      setSubmitting(true);
-      clearError();
-      
-      await togglePaymentMethod(methodId, shouldActivate);
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const openEditModal = (method) => {
-    setEditingMethod(method);
-    setCardForm({
-      number: '1234 5678 9012 ' + (method.lastFourDigits || method.last_four_digits || '****'),
-      name: method.cardholderName || method.name || '',
-      expiry: method.formattedExpiry || method.expiry || '',
-      cvc: '', // CVC nunca se prellenará por seguridad
-      nickname: method.nickname || '',
-      focus: ''
-    });
-  };
-
-  const closeModal = () => {
-    resetForm();
-    setIsModalOpen(false);
-    setEditingMethod(null);
-  };
-
-  // Función para formatear el número de tarjeta mostrado
-  const formatDisplayNumber = (method) => {
-    return `**** **** **** ${method.lastFourDigits || method.last_four_digits || '****'}`;
-  };
-
-  // Función para capitalizar el nombre del issuer
-  const formatIssuerName = (issuer) => {
-    if (!issuer || issuer === 'unknown') return 'Tarjeta';
-    return issuer.charAt(0).toUpperCase() + issuer.slice(1);
-  };
-
-  // Función para obtener el estado de la tarjeta (compatibilidad)
-  const getCardStatus = (method) => {
-    return method.isDefault || method.active || false;
-  };
-
-  // Función para obtener el ID de la tarjeta (compatibilidad)
-  const getCardId = (method) => {
-    return method.id || method._id;
-  };
 
   if (loading && methods.length === 0) {
     return (
@@ -228,6 +306,7 @@ const PaymentMethods = () => {
   }
 
   return (
+    <>
     <div className="payment-container">
       <div className="payment-header">
         <h3 className="payment-title">Tus métodos de pago</h3>
@@ -280,7 +359,7 @@ const PaymentMethods = () => {
             <div key={getCardId(method)} className={`payment-method ${getCardStatus(method) ? 'active' : 'inactive'}`}>
               <p>
                 <strong>{getCardStatus(method) ? 'Tarjeta por defecto' : 'Tarjeta registrada'}</strong>
-                <br />{method.displayName || `${formatIssuerName(method.issuer)} terminada en ${method.lastFourDigits || method.last_four_digits}`}<br />
+                <br />{method.displayName || `${formatCardBrand(method.cardBrand)} terminada en ${method.lastFour || method.lastFourDigits || method.last_four_digits}`}<br />
                 {method.isExpired && <span style={{color: 'red'}}>⚠️ Tarjeta expirada</span>}
               </p>
               <div className="payment-buttons">
@@ -288,10 +367,8 @@ const PaymentMethods = () => {
                   className={`payment-button active-toggle ${getCardStatus(method) ? 'active' : ''}`}
                   onClick={() => {
                     if (!getCardStatus(method)) {
-                      // Si no está activa, activarla (marcar como por defecto)
                       handleToggleMethod(getCardId(method), true);
                     }
-                    // Si ya está activa, no hacer nada (el botón estará deshabilitado)
                   }}
                   disabled={submitting || loading || method.isExpired || getCardStatus(method)}
                   aria-label={getCardStatus(method) ? 'Tarjeta por defecto' : 'Activar como por defecto'}
@@ -324,224 +401,256 @@ const PaymentMethods = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
         }}>
           <p>Actualizando...</p>
         </div>
       )}
+    </div>
 
-      {/* Modal para añadir método */}
-      <Modal isOpen={isModalOpen} onClose={closeModal}>
-        <div className="card-form-container">
-          <h3 style={{ marginTop: '20px', marginBottom: '20px' }}>Añadir método de pago</h3>
-          
-          {/* Aviso de seguridad */}
-          <div style={{ 
-            background: '#d7be2e30', 
-            borderRadius: '13px', 
-            padding: '10px', 
-            marginBottom: '5px',
-            fontSize: '14px'
-          }}>
-            <strong>Seguridad:</strong> Usamos tokenización Wompi. Tu tarjeta se almacena de forma segura y encriptada.
-          </div>
-          
-          <Cards
-            number={cardForm.number || ''}
-            name={cardForm.name || ''}
-            expiry={cardForm.expiry || ''}
-            cvc="***" // Siempre mostrar asteriscos
-            focused={cardForm.focus}
-            locale={{
-              valid: 'VÁLIDA HASTA',
-              monthYear: 'MM/AA',
-              yourNameHere: 'NOMBRE AQUÍ'
-            }}
-            placeholders={{
-              name: 'TU NOMBRE'
-            }}
-          />
-          
-          <form className="card-form" onSubmit={(e) => e.preventDefault()}>
-            <div className="form-group">
-              <input
-                type="text"
-                name="number"
-                placeholder="Número de tarjeta"
-                value={cardForm.number}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                className="card-input"
-                disabled={submitting}
-              />
-            </div>
-            
-            <div className="form-group">
-              <input
-                type="text"
-                name="name"
-                placeholder="Nombre en la tarjeta"
-                value={cardForm.name}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                className="card-input"
-                disabled={submitting}
-              />
-            </div>
-            
-            <div className="form-group">
-              <input
-                type="text"
-                name="nickname"
-                placeholder="Nombre para identificar (opcional)"
-                value={cardForm.nickname}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                className="card-input"
-                disabled={submitting}
-              />
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="expiry"
-                  placeholder="MM/AA"
-                  value={cardForm.expiry}
-                  onChange={handleInputChange}
-                  onFocus={handleInputFocus}
-                  className="card-input"
-                  disabled={submitting}
-                />
+    {/* Add Card Modal - Rendered via Portal to document.body */}
+    {isModalOpen && ReactDOM.createPortal(
+        <div className="payment-modal-overlay" onClick={closeModal}>
+          <div className="payment-modal-content" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="payment-modal-header">
+              <div>
+                <h2>Agregar método de pago</h2>
+                <p>Ingresa los datos de tu tarjeta de forma segura</p>
               </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="cvc"
-                  placeholder="CVC"
-                  value={cardForm.cvc}
-                  onChange={handleInputChange}
-                  onFocus={handleInputFocus}
-                  className="card-input"
-                  disabled={submitting}
-                  maxLength="4"
-                />
-              </div>
+              <button className="btn-close-modal" onClick={closeModal}>
+                <X size={24} />
+              </button>
             </div>
-            
-            <button 
-              type="button" 
-              onClick={handleAddMethod} 
-              className="modal-save-btn"
-              disabled={submitting}
-            >
-              {submitting ? 'Guardando...' : 'Guardar tarjeta'}
-            </button>
-          </form>
-        </div>
-      </Modal>
 
-      {/* Modal para editar método */}
-      {editingMethod && (
-        <Modal isOpen={true} onClose={closeModal}>
-          <div className="card-form-container">
-            <h3 style={{ marginTop: 0, marginBottom: '20px' }}>Editar método de pago</h3>
-            
-            {/* Aviso informativo */}
-            <div style={{ 
-              background: '#e3f2fd30', 
-              borderRadius: '13px', 
-              padding: '10px', 
-              marginBottom: '15px',
-              fontSize: '14px'
-            }}>
-              <strong>Nota:</strong> Solo puedes editar el nombre personalizado. Los datos de la tarjeta no se pueden modificar por seguridad.
-            </div>
-            
-            <Cards
-              number={cardForm.number || ''}
-              name={cardForm.name || ''}
-              expiry={cardForm.expiry || ''}
-              cvc="***" // Siempre mostrar asteriscos
-              focused={cardForm.focus}
-            />
-            
-            <form className="card-form" onSubmit={(e) => e.preventDefault()}>
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="number"
-                  placeholder="Número de tarjeta"
-                  value={cardForm.number}
-                  className="card-input"
-                  disabled={true}
-                  style={{ opacity: 0.6, cursor: 'not-allowed' }}
-                />
-              </div>
-              
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Nombre en la tarjeta"
-                  value={cardForm.name}
-                  className="card-input"
-                  disabled={true}
-                  style={{ opacity: 0.6, cursor: 'not-allowed' }}
-                />
-              </div>
-              
-              <div className="form-group">
-                <input
-                  type="text"
-                  name="nickname"
-                  placeholder="Nombre personalizado (opcional)"
-                  value={cardForm.nickname}
-                  onChange={handleInputChange}
-                  onFocus={handleInputFocus}
-                  className="card-input"
-                  disabled={submitting}
-                />
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <input
-                    type="text"
-                    name="expiry"
-                    placeholder="MM/AA"
-                    value={cardForm.expiry}
-                    className="card-input"
-                    disabled={true}
-                    style={{ opacity: 0.6, cursor: 'not-allowed' }}
-                  />
+            {/* Modal Body */}
+            <div className="payment-modal-body">
+              {/* Security Notice */}
+              <div className="security-notice">
+                <AlertTriangle size={20} />
+                <div>
+                  <strong>Seguridad:</strong>
+                  <p>Usamos tokenización por Wompi. Tu tarjeta se almacenará de forma segura y encriptada.</p>
                 </div>
               </div>
-              
-              <div className="modal-buttons">
+
+              {/* Card Preview */}
+              <div className="card-preview-container">
+                <Cards
+                  number={cardForm.number || ''}
+                  name={cardForm.name || ''}
+                  expiry={cardForm.expiry || ''}
+                  cvc={cardForm.cvc || ''}
+                  focused={cardForm.focus}
+                  locale={{
+                    valid: 'VÁLIDA HASTA',
+                    monthYear: 'MM/AA',
+                    yourNameHere: 'NOMBRE AQUÍ'
+                  }}
+                  placeholders={{
+                    name: 'TU NOMBRE'
+                  }}
+                />
+              </div>
+
+              {/* Card Form */}
+              <form className="card-form" onSubmit={(e) => e.preventDefault()}>
+                <div className="form-group">
+                  <label>Número de tarjeta</label>
+                  <input
+                    type="text"
+                    name="number"
+                    placeholder="1234 5678 9012 3456"
+                    value={cardForm.number}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    disabled={submitting}
+                    className="form-input-payment"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Nombre en la tarjeta</label>
+                  <input
+                    type="text"
+                    name="name"
+                    placeholder="NOMBRE APELLIDO"
+                    value={cardForm.name}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    disabled={submitting}
+                    className="form-input-payment"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Nombre personalizado (Opcional)</label>
+                  <input
+                    type="text"
+                    name="nickname"
+                    placeholder="Mi tarjeta personal"
+                    value={cardForm.nickname}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    disabled={submitting}
+                    className="form-input-payment"
+                  />
+                </div>
+
+                <div className="form-row-payment">
+                  <div className="form-group">
+                    <label>Fecha de expiración</label>
+                    <input
+                      type="text"
+                      name="expiry"
+                      placeholder="MM/AA"
+                      value={cardForm.expiry}
+                      onChange={handleInputChange}
+                      onFocus={handleInputFocus}
+                      disabled={submitting}
+                      className="form-input-payment row"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>CVC</label>
+                    <input
+                      type="text"
+                      name="cvc"
+                      placeholder="123"
+                      value={cardForm.cvc}
+                      onChange={handleInputChange}
+                      onFocus={handleInputFocus}
+                      disabled={submitting}
+                      maxLength="4"
+                      className="form-input-payment row"
+                    />
+                  </div>
+                </div>
+
                 <button 
                   type="button" 
-                  onClick={handleEditMethod}
-                  className="modal-save-btn"
+                  onClick={handleAddMethod} 
+                  className="btn-submit-method"
                   disabled={submitting}
                 >
-                  {submitting ? 'Guardando...' : 'Guardar cambios'}
+                  {submitting ? 'Guardando...' : 'Guardar tarjeta'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteMethod(getCardId(editingMethod))}
-                  className="modal-delete-btn"
-                  disabled={submitting}
-                >
-                  {submitting ? 'Eliminando...' : 'Eliminar'}
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </Modal>
-      )}
-    </div>
+        </div>,
+        document.body
+      )
+    }
+
+    {/* Edit Card Modal - Rendered via Portal to document.body */}
+    {editingMethod && ReactDOM.createPortal(
+        <div className="payment-modal-overlay" onClick={closeModal}>
+          <div className="payment-modal-content" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="payment-modal-header">
+              <div>
+                <h2>Editar método de pago</h2>
+                <p>Solo puedes editar el nombre personalizado</p>
+              </div>
+              <button className="btn-close-modal" onClick={closeModal}>
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="payment-modal-body">
+              {/* Info Notice */}
+              <div className="info-notice">
+                <AlertCircle size={20} />
+                <div>
+                  <strong>Nota de seguridad</strong>
+                  <p>Los datos de la tarjeta no se pueden modificar por seguridad.</p>
+                </div>
+              </div>
+
+              {/* Card Preview */}
+              <div className="card-preview-container">
+                <Cards
+                  number={cardForm.number || ''}
+                  name={cardForm.name || ''}
+                  expiry={cardForm.expiry || ''}
+                  cvc="***"
+                  focused={cardForm.focus}
+                />
+              </div>
+
+              {/* Edit Form */}
+              <form className="card-form" onSubmit={(e) => e.preventDefault()}>
+                <div className="form-group">
+                  <label>Número de tarjeta</label>
+                  <input
+                    type="text"
+                    value={cardForm.number}
+                    disabled
+                    className="form-input-payment disabled"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Nombre en la tarjeta</label>
+                  <input
+                    type="text"
+                    value={cardForm.name}
+                    disabled
+                    className="form-input-payment disabled"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Nombre personalizado</label>
+                  <input
+                    type="text"
+                    name="nickname"
+                    placeholder="Mi tarjeta personal"
+                    value={cardForm.nickname}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    disabled={submitting}
+                    className="form-input-payment"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Fecha de expiración</label>
+                  <input
+                    type="text"
+                    value={cardForm.expiry}
+                    disabled
+                    className="form-input-payment disabled"
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button 
+                    type="button" 
+                    onClick={handleEditMethod}
+                    className="btn-submit-method"
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMethod(getCardId(editingMethod))}
+                    className="btn-delete-card"
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Eliminando...' : 'Eliminar tarjeta'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )
+    }
+    </>
   );
 };
 

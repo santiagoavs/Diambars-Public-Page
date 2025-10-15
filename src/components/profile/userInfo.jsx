@@ -1,13 +1,17 @@
 // src/components/profile/UserInfo.jsx
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './userInfo.css';
 import { useAuth } from '../../context/authContext';
 import { updateUserProfile } from '../../api/updateProfileService';
 import { resendVerificationEmail } from '../../api/resendVerificatonService';
+import { Palette } from 'lucide-react';
+import { Truck } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 function UserInfo() {
   const { user, login, logout } = useAuth();
+  const navigate = useNavigate();
   
   console.log('UserInfo renderizado, user:', user);
   
@@ -223,6 +227,11 @@ function UserInfo() {
     logout();
   };
 
+  // Manejar navegación
+  const handleNavigate = (path) => {
+    navigate(path);
+  };
+
   // Si no hay usuario logueado, mostrar un mensaje o redirigir
   if (!user) {
     return (
@@ -326,6 +335,52 @@ function UserInfo() {
             )}
           </div>
           <button className="logout-link" onClick={handleLogout}>Cerrar sesión</button>
+        </div>
+
+        <div className="quick-links-container">
+            <div className="quick-links-grid">
+              <button className="quick-link-card" onClick={() => handleNavigate("/design-hub")} aria-label="Ir a mis diseños">
+                <div className="quick-link-icon">
+                <Palette size={26} color="#2d778e" strokeWidth={2} />
+                </div>
+                <span className="quick-link-text">Mis diseños</span>
+                <svg
+                  className="quick-link-arrow"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+
+              <button className="quick-link-card" onClick={() => handleNavigate("/orders-hub")} aria-label="Ir a mis órdenes">
+                <div className="quick-link-icon">
+                <Truck size={26} color="#2d778e" strokeWidth={2} />
+                </div>
+                <span className="quick-link-text">Mis órdenes</span>
+                <svg
+                  className="quick-link-arrow"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+          </div>
         </div>
 
         <button 

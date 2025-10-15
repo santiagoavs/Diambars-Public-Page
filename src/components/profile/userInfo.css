@@ -2,7 +2,7 @@
   width: 453px;
   min-height: 602px;
   border-radius: 10px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Mona Sans', sans-serif;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -32,10 +32,14 @@
   opacity: 0.8;
 }
 
+.user-info-container h3 {
+  font-family: system-ui, -apple-system, sans-serif;
+
+}
 
 .profile-image {
   width: 100%;
-  height: 220px;
+  height: 180px;
   object-fit: cover; 
   background: rgba(169, 169, 169, 0.6); 
   backdrop-filter: blur(5px);
@@ -44,7 +48,7 @@
 
 .add-photo {
   position: absolute;
-  top: 189px; 
+  top: 149px; 
   left: 50%;
   width: 100%;
   display: flex;
@@ -89,6 +93,10 @@
   color: #3F2724;
 }
 
+.underline-input:focus {
+  outline: none;
+}
+
 .underline-input::placeholder {
   color: rgba(63, 39, 36, 0.5);
 }
@@ -116,8 +124,8 @@
   color: #FFF1D0;
   border-radius: 15px;
   padding: 12px 32px;
-  height: 50px;
-  margin: 30px 115px; 
+  height: 55px;
+  margin: 25px 115px 30px; 
   width: 190px;
   font-size: 1.1rem;
   font-family: 'Mona Sans', sans-serif;
@@ -127,7 +135,6 @@
   overflow: hidden;
   z-index: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  
   background: rgba(45, 120, 142, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -189,19 +196,19 @@
 
 .change-password-link {
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Mona Sans', sans-serif;
   font-weight: normal;
-  letter-spacing: -1px;
   color: #BB4751;
 }
 
 
 .logout-link {
+  font-family: 'Mona Sans', sans-serif;
   background: none;
   border: none;
   color: #B02F2F;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
   transition: color 0.2s ease;
@@ -328,6 +335,138 @@
   flex-direction: column;
   margin-bottom: 1rem;
   position: relative;
+}
+
+.quick-links-container {
+  width: 100%;
+  margin-top: 17px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.quick-links-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c2c2c;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+/* Grid Layout */
+.quick-links-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* Quick Link Card */
+.quick-link-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 60px;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(59, 156, 186, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(131, 190, 217, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  text-align: left;
+  font-family: inherit;
+  overflow: hidden;
+}
+
+.quick-link-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(131, 190, 217, 0.4) 0%, rgba(131, 190, 217, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.quick-link-card:last-child::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(315deg, rgba(131, 190, 217, 0.4) 0%, rgba(131, 190, 217, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.quick-link-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  border-color: rgba(131, 190, 217, 0.6);
+}
+
+.quick-link-card:hover::before {
+  opacity: 1;
+}
+
+.quick-link-card:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Icon */
+.quick-link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: #4a5568;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.quick-link-card:hover .quick-link-icon {
+  color: #2d3748;
+  transform: scale(1.05);
+}
+
+/* Text */
+.quick-link-text {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+  color: #2c2c2c;
+  letter-spacing: -0.01em;
+  transition: color 0.3s ease;
+}
+
+.quick-link-card:hover .quick-link-text {
+  color: #1a1a1a;
+}
+
+/* Arrow */
+.quick-link-arrow {
+  color: #718096;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  opacity: 0.6;
+}
+
+.quick-link-card:hover .quick-link-arrow {
+  transform: translateX(4px);
+  opacity: 1;
+  color: #4a5568;
 }
 
 .swal2-popup.custom-swal-popup {

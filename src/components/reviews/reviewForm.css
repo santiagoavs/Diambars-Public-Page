@@ -202,7 +202,7 @@ form {
   }
 
   .review-submit-button {
-    width: 100%;
+    width: 30%;
     font-size: 1rem;
   }
 }
@@ -216,7 +216,7 @@ form {
   }
 
   .review-submit-button {
-    width: 100%;
+    width: 40%;
     padding: 10px 20px;
     font-size: 0.95rem;
   }

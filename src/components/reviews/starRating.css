@@ -68,3 +68,15 @@
 .star:active {
   transform: translateY(1px) scale(0.95);
 }
+
+@media (max-width: 480px) {
+  .star {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 370px) {
+  .star {
+    font-size: 1.6rem;
+  }
+}

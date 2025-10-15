@@ -1,6 +1,7 @@
 // components/orders/completeOrderModal.jsx
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, CreditCard, Truck, Package, ArrowRight, ArrowLeft, Check } from 'lucide-react';
+import { X, MapPin, CreditCard, Truck, Package, ArrowRight, ArrowLeft, Check, Star, AlertCircle } from 'lucide-react';
+import { usePaymentMethods } from '../../hooks/usePaymentMethods';
 import './completeOrderModal.css';
 
 const CompleteOrderModal = ({ isOpen, onClose, design, onComplete }) => {
@@ -9,6 +10,8 @@ const CompleteOrderModal = ({ isOpen, onClose, design, onComplete }) => {
     deliveryType: 'meetup',
     shippingAddress: null,
     paymentMethod: 'cash',
+    selectedCard: null,
+    cvc: '',
     notes: ''
   });
   const [loading, setLoading] = useState(false);
@@ -29,6 +32,8 @@ const CompleteOrderModal = ({ isOpen, onClose, design, onComplete }) => {
         deliveryType: 'meetup',
         shippingAddress: null,
         paymentMethod: 'cash',
+        selectedCard: null,
+        cvc: '',
         notes: ''
       });
     }
@@ -52,7 +57,13 @@ const CompleteOrderModal = ({ isOpen, onClose, design, onComplete }) => {
     switch (currentStep) {
       case 0: return formData.deliveryType;
       case 1: return formData.deliveryType === 'meetup' || formData.shippingAddress;
-      case 2: return formData.paymentMethod;
+      case 2: {
+        // For online payment, require card selection and CVC
+        if (formData.paymentMethod === 'online') {
+          return formData.selectedCard && formData.cvc && formData.cvc.length >= 3;
+        }
+        return formData.paymentMethod;
+      }
       case 3: return true;
       default: return false;
     }
@@ -240,6 +251,8 @@ const AddressStep = ({ formData, setFormData }) => {
 };
 
 const PaymentMethodStep = ({ formData, setFormData }) => {
+  const { methods, loading } = usePaymentMethods();
+
   const paymentMethods = [
     {
       id: 'cash',
@@ -248,44 +261,133 @@ const PaymentMethodStep = ({ formData, setFormData }) => {
       icon: '💵'
     },
     {
-      id: 'bank_transfer',
-      name: 'Transferencia Bancaria',
-      description: 'Transferencia a cuenta bancaria',
-      icon: '🏦',
-      disabled: true,
-      note: 'Próximamente disponible'
-    },
-    {
-      id: 'wompi',
+      id: 'online',
       name: 'Pago en Línea',
-      description: 'Tarjeta de crédito/débito o PSE',
-      icon: '💳',
-      disabled: true,
-      note: 'Próximamente disponible'
+      description: 'Usa una tarjeta guardada',
+      icon: '💳'
     }
   ];
+
+  const handleCvcChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').substring(0, 4);
+    setFormData({ ...formData, cvc: value });
+  };
+
+  const formatCardNumber = (card) => {
+    return `**** **** **** ${card.lastFour || '****'}`;
+  };
+
+  const formatCardBrand = (brand) => {
+    if (!brand || brand === 'unknown') return 'Tarjeta';
+    return brand.charAt(0).toUpperCase() + brand.slice(1);
+  };
 
   return (
     <div className="step-content">
       <h3>Método de Pago</h3>
       <p className="step-description">Selecciona cómo deseas pagar tu pedido</p>
 
+      {/* Payment Method Selection */}
       <div className="payment-methods">
         {paymentMethods.map(method => (
           <div 
             key={method.id}
-            className={`payment-method ${formData.paymentMethod === method.id ? 'selected' : ''} ${method.disabled ? 'disabled' : ''}`}
-            onClick={() => !method.disabled && setFormData({ ...formData, paymentMethod: method.id })}
+            className={`payment-method-modal ${formData.paymentMethod === method.id ? 'selected' : ''}`}
+            onClick={() => setFormData({ ...formData, paymentMethod: method.id, selectedCard: null, cvc: '' })}
           >
             <div className="payment-icon">{method.icon}</div>
             <div className="payment-info">
               <h4>{method.name}</h4>
               <p>{method.description}</p>
-              {method.note && <span className="payment-note">{method.note}</span>}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Show saved cards if online payment is selected */}
+      {formData.paymentMethod === 'online' && (
+        <div className="saved-cards-section">
+          <h4>Selecciona una Tarjeta</h4>
+          
+          {loading ? (
+            <div className="loading-cards">
+              <p>Cargando tarjetas...</p>
+            </div>
+          ) : methods.length === 0 ? (
+            <div className="no-cards-message">
+              <AlertCircle size={32} />
+              <p>No tienes tarjetas guardadas</p>
+              <small>Ve a tu perfil para agregar una tarjeta</small>
+            </div>
+          ) : (
+            <>
+              <div className="saved-cards-list">
+                {methods.map((card) => (
+                  <div
+                    key={card.id}
+                    className={`saved-card-item ${formData.selectedCard?.id === card.id ? 'selected' : ''} ${card.isExpired ? 'expired' : ''}`}
+                    onClick={() => !card.isExpired && setFormData({ ...formData, selectedCard: card, cvc: '' })}
+                  >
+                    <div className="card-radio">
+                      {formData.selectedCard?.id === card.id && <Check size={16} />}
+                    </div>
+                    <div className="card-details-compact">
+                      <div className="card-brand-row">
+                        <CreditCard size={20} />
+                        <span className="brand-name">{formatCardBrand(card.cardBrand)}</span>
+                        {card.isDefault && (
+                          <span className="default-badge">
+                            <Star size={12} fill="currentColor" />
+                            Por Defecto
+                          </span>
+                        )}
+                      </div>
+                      <div className="card-number-compact">{formatCardNumber(card)}</div>
+                      <div className="card-expiry-compact">
+                        Expira: {card.expiryMonth}/{card.expiryYear}
+                      </div>
+                      {card.nickname && (
+                        <div className="card-nickname-compact">{card.nickname}</div>
+                      )}
+                      {card.isExpired && (
+                        <div className="card-expired-badge">
+                          <AlertCircle size={14} />
+                          Expirada
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* CVC Input - Show only when card is selected */}
+              {formData.selectedCard && (
+                <div className="cvc-input-section">
+                  <label htmlFor="cvc-input">
+                    <strong>Código de Seguridad (CVC)</strong>
+                  </label>
+                  <p className="cvc-description">
+                    Ingresa el CVC de tu tarjeta {formatCardBrand(formData.selectedCard.cardBrand)} terminada en {formData.selectedCard.lastFour}
+                  </p>
+                  <input
+                    id="cvc-input"
+                    type="text"
+                    placeholder="123"
+                    value={formData.cvc}
+                    onChange={handleCvcChange}
+                    maxLength="4"
+                    className="cvc-input"
+                    autoComplete="off"
+                  />
+                  <small className="cvc-note">
+                    🔒 Tu CVC no se almacena por seguridad
+                  </small>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -334,11 +436,29 @@ const ConfirmationStep = ({ formData, design }) => {
           <div className="summary-item">
             <span className="item-label">Método:</span>
             <span className="item-value">
-              {formData.paymentMethod === 'cash' ? 'Efectivo' : 
-               formData.paymentMethod === 'bank_transfer' ? 'Transferencia Bancaria' : 
-               'Pago en Línea'}
+              {formData.paymentMethod === 'cash' ? 'Efectivo' : 'Pago en Línea'}
             </span>
           </div>
+          {formData.paymentMethod === 'online' && formData.selectedCard && (
+            <>
+              <div className="summary-item">
+                <span className="item-label">Tarjeta:</span>
+                <span className="item-value">
+                  {formData.selectedCard.cardBrand?.toUpperCase()} **** {formData.selectedCard.lastFour}
+                </span>
+              </div>
+              <div className="summary-item">
+                <span className="item-label">Titular:</span>
+                <span className="item-value">{formData.selectedCard.cardHolderName}</span>
+              </div>
+              {formData.selectedCard.nickname && (
+                <div className="summary-item">
+                  <span className="item-label">Alias:</span>
+                  <span className="item-value">{formData.selectedCard.nickname}</span>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
