@@ -14,9 +14,26 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // ← CAMBIAR A true
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // Flag to prevent re-auth during logout
 
   // Función para verificar el estado de autenticación
   const checkAuthStatus = async () => {
+    // Don't check auth if we're in the middle of logging out
+    if (isLoggingOut) {
+      console.log('🚫 [AuthContext] Skipping auth check - logout in progress');
+      return;
+    }
+    
+    // Check if user explicitly logged out (persists across page refreshes)
+    const explicitLogout = localStorage.getItem('explicitLogout');
+    if (explicitLogout === 'true') {
+      console.log('🚫 [AuthContext] User explicitly logged out - skipping auth check');
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       console.log('🔍 [AuthContext] Verificando estado de autenticación...');
       
@@ -115,6 +132,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('authTimestamp', Date.now().toString());
+      // Clear explicit logout flag when logging in
+      localStorage.removeItem('explicitLogout');
       console.log('💾 [AuthContext] Usuario guardado en localStorage con timestamp');
     } catch (error) {
       console.warn('⚠️ [AuthContext] No se pudo guardar en localStorage:', error);
@@ -123,6 +142,9 @@ export const AuthProvider = ({ children }) => {
 
   // Método para cerrar sesión
   const logout = async () => {
+    // Set flag to prevent any re-authentication during logout
+    setIsLoggingOut(true);
+    
     try {
       console.log('👋 [AuthContext] Cerrando sesión...');
       
@@ -143,6 +165,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('authTimestamp');
       
+      // CRITICAL: Set explicit logout flag to prevent re-authentication on page refresh
+      localStorage.setItem('explicitLogout', 'true');
+      console.log('🚫 [AuthContext] Explicit logout flag set');
+      
       // Limpiar cualquier cache del navegador relacionado con la sesión
       if ('caches' in window) {
         caches.keys().then(names => {
@@ -155,6 +181,11 @@ export const AuthProvider = ({ children }) => {
       }
       
       console.log('✅ [AuthContext] Sesión cerrada localmente y cache limpiado');
+      
+      // Reset logout flag after a short delay to allow UI to update
+      setTimeout(() => {
+        setIsLoggingOut(false);
+      }, 500);
     }
   };
 
@@ -166,6 +197,12 @@ export const AuthProvider = ({ children }) => {
 
   // Método para refrescar datos del usuario
   const refreshUser = async () => {
+    // Don't refresh if we're logging out
+    if (isLoggingOut) {
+      console.log('🚫 [AuthContext] Skipping refresh - logout in progress');
+      return;
+    }
+    
     try {
       console.log('🔄 [AuthContext] Refrescando datos del usuario...');
       const response = await apiClient.get('/auth/checkAuth');

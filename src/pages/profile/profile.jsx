@@ -13,11 +13,13 @@ const Profile = () => {
   const { user, refreshUser, isAuthenticated } = useContext(AuthContext); //Verificamos si hay usuario autenticado
 
   // Refrescar datos del usuario cuando se carga la página de perfil
+  // Only refresh when user logs IN (isAuthenticated becomes true), not when logging out
   useEffect(() => {
     if (isAuthenticated && user) {
+      console.log('🔄 [Profile] Refrescando datos del usuario en perfil');
       refreshUser();
     }
-  }, [isAuthenticated, refreshUser]);
+  }, []); // Empty deps - only run on mount, refreshUser has its own logout protection
 
   if (!user) {
     //Si no está autenticado, mostramos el login
