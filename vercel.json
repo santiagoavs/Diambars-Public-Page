@@ -6,7 +6,7 @@
       "destination": "https://expo2025-8bjn.onrender.com/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/:path((?!.*\\.).*)",
       "destination": "/index.html"
     }
   ],
