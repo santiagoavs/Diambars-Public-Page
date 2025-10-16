@@ -1,7 +1,8 @@
 // components/orders/completeOrderModal.jsx
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, CreditCard, Truck, Package, ArrowRight, ArrowLeft, Check, Star, AlertCircle } from 'lucide-react';
+import { X, MapPin, CreditCard, Truck, Package, ArrowRight, ArrowLeft, Check, Star, AlertCircle, Plus } from 'lucide-react';
 import { usePaymentMethods } from '../../hooks/usePaymentMethods';
+import { useAddresses } from '../../hooks/useAddresses';
 import './completeOrderModal.css';
 
 const CompleteOrderModal = ({ isOpen, onClose, design, onComplete }) => {
@@ -60,7 +61,12 @@ const CompleteOrderModal = ({ isOpen, onClose, design, onComplete }) => {
       case 2: {
         // For online payment, require card selection and CVC
         if (formData.paymentMethod === 'online') {
-          return formData.selectedCard && formData.cvc && formData.cvc.length >= 3;
+          // Check if card is selected, not expired, and CVC is valid
+          const cardValid = formData.selectedCard && 
+                           !formData.selectedCard.isExpired &&
+                           formData.cvc && 
+                           formData.cvc.length >= 3;
+          return cardValid;
         }
         return formData.paymentMethod;
       }
@@ -212,6 +218,15 @@ const DeliveryTypeStep = ({ formData, setFormData }) => {
 };
 
 const AddressStep = ({ formData, setFormData }) => {
+  const { addresses, isLoading, defaultAddress } = useAddresses();
+
+  // Auto-select default address if available and none selected
+  useEffect(() => {
+    if (defaultAddress && !formData.shippingAddress && formData.deliveryType === 'delivery') {
+      setFormData({ ...formData, shippingAddress: defaultAddress });
+    }
+  }, [defaultAddress, formData.deliveryType]);
+
   if (formData.deliveryType === 'meetup') {
     return (
       <div className="step-content">
@@ -226,26 +241,84 @@ const AddressStep = ({ formData, setFormData }) => {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="step-content">
+        <div className="loading-addresses">
+          <p>Cargando direcciones...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (addresses.length === 0) {
+    return (
+      <div className="step-content">
+        <h3>Dirección de Envío</h3>
+        <p className="step-description">No tienes direcciones guardadas</p>
+
+        <div className="empty-addresses">
+          <MapPin size={48} />
+          <h4>Sin Direcciones</h4>
+          <p>Agrega una dirección de envío desde tu perfil para continuar.</p>
+          <a href="/profile" className="btn-primary" style={{ marginTop: '1rem' }}>
+            <Plus size={20} />
+            Ir a Mi Perfil
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="step-content">
       <h3>Dirección de Envío</h3>
-      <p className="step-description">Selecciona o agrega una dirección de envío</p>
+      <p className="step-description">Selecciona una dirección de envío</p>
 
-      <div className="address-placeholder">
-        <MapPin size={48} />
-        <h4>Funcionalidad en Desarrollo</h4>
-        <p>La gestión de direcciones estará disponible próximamente.</p>
-        <p className="placeholder-note">Por ahora, coordinaremos la dirección contigo después de confirmar el pedido.</p>
+      <div className="addresses-list">
+        {addresses.map((address) => (
+          <div
+            key={address._id}
+            className={`address-card ${
+              formData.shippingAddress?._id === address._id ? 'selected' : ''
+            }`}
+            onClick={() => setFormData({ ...formData, shippingAddress: address })}
+          >
+            <div className="address-radio">
+              {formData.shippingAddress?._id === address._id && <Check size={16} />}
+            </div>
+            <div className="address-info">
+              <div className="address-header">
+                {address.label && <span className="address-label">{address.label}</span>}
+                {address.isDefault && (
+                  <span className="default-badge">
+                    <Star size={12} fill="currentColor" />
+                    Por Defecto
+                  </span>
+                )}
+              </div>
+              <p className="address-text">{address.addressLine1}</p>
+              {address.addressLine2 && <p className="address-text">{address.addressLine2}</p>}
+              <p className="address-location">
+                {address.municipality}, {address.department}
+              </p>
+              {address.recipientName && (
+                <p className="address-recipient">Para: {address.recipientName}</p>
+              )}
+              {address.phone && (
+                <p className="address-phone">Tel: {address.phone}</p>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Temporary bypass for development */}
-      <button 
-        onClick={() => setFormData({ ...formData, shippingAddress: { placeholder: true } })}
-        className="btn-secondary"
-        style={{ marginTop: '1rem' }}
-      >
-        Continuar (Coordinar después)
-      </button>
+      <div className="address-actions">
+        <a href="/profile" className="btn-secondary" target="_blank" rel="noopener noreferrer">
+          <Plus size={20} />
+          Agregar Nueva Dirección
+        </a>
+      </div>
     </div>
   );
 };
@@ -423,11 +496,43 @@ const ConfirmationStep = ({ formData, design }) => {
               {formData.deliveryType === 'meetup' ? 'Punto de Encuentro' : 'Envío a Domicilio'}
             </span>
           </div>
-          {formData.deliveryType === 'delivery' && (
-            <div className="summary-item">
-              <span className="item-label">Dirección:</span>
-              <span className="item-value">A coordinar</span>
-            </div>
+          {formData.deliveryType === 'delivery' && formData.shippingAddress && (
+            <>
+              {formData.shippingAddress.label && (
+                <div className="summary-item">
+                  <span className="item-label">Etiqueta:</span>
+                  <span className="item-value">{formData.shippingAddress.label}</span>
+                </div>
+              )}
+              <div className="summary-item">
+                <span className="item-label">Dirección:</span>
+                <span className="item-value">{formData.shippingAddress.addressLine1}</span>
+              </div>
+              {formData.shippingAddress.addressLine2 && (
+                <div className="summary-item">
+                  <span className="item-label"></span>
+                  <span className="item-value">{formData.shippingAddress.addressLine2}</span>
+                </div>
+              )}
+              <div className="summary-item">
+                <span className="item-label">Ubicación:</span>
+                <span className="item-value">
+                  {formData.shippingAddress.municipality}, {formData.shippingAddress.department}
+                </span>
+              </div>
+              {formData.shippingAddress.recipientName && (
+                <div className="summary-item">
+                  <span className="item-label">Destinatario:</span>
+                  <span className="item-value">{formData.shippingAddress.recipientName}</span>
+                </div>
+              )}
+              {formData.shippingAddress.phone && (
+                <div className="summary-item">
+                  <span className="item-label">Teléfono:</span>
+                  <span className="item-value">{formData.shippingAddress.phone}</span>
+                </div>
+              )}
+            </>
           )}
         </div>
 

@@ -69,6 +69,74 @@ export const useOrders = (initialFilters = {}) => {
     }
   }, [filters, isAuthenticated, user?._id]); // Add dependencies to prevent stale closures
 
+  const createOrder = useCallback(async (orderData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('📦 [useOrders] Creating order:', orderData);
+      
+      // Build request payload
+      const payload = {
+        designId: orderData.designId,
+        quantity: orderData.quantity || 1,
+        deliveryType: orderData.deliveryType,
+        paymentMethod: orderData.paymentMethod,
+        notes: orderData.notes || ''
+      };
+
+      // Add address if delivery
+      if (orderData.deliveryType === 'delivery' && orderData.shippingAddress) {
+        payload.addressId = orderData.shippingAddress._id;
+      }
+
+      // Add payment method info if online payment
+      console.log('💳 [useOrders] Payment check:', {
+        paymentMethod: orderData.paymentMethod,
+        hasSelectedCard: !!orderData.selectedCard,
+        selectedCard: orderData.selectedCard,
+        hasCvc: !!orderData.cvc
+      });
+      
+      if (orderData.paymentMethod === 'online' && orderData.selectedCard) {
+        // Try both _id and id (MongoDB uses _id, but some objects use id)
+        payload.paymentMethodId = orderData.selectedCard._id || orderData.selectedCard.id;
+        payload.cvc = orderData.cvc;
+        console.log('💳 [useOrders] Added payment info to payload:', {
+          paymentMethodId: payload.paymentMethodId,
+          cvcLength: payload.cvc?.length,
+          cardId: orderData.selectedCard._id,
+          cardIdLowercase: orderData.selectedCard.id
+        });
+      }
+
+      console.log('📤 [useOrders] Sending payload:', payload);
+      
+      const response = await ordersAPI.createOrder(payload);
+      
+      console.log('✅ [useOrders] Order created:', response);
+      
+      if (response.success) {
+        // Refresh orders list
+        await fetchOrders();
+        return response.data.order;
+      } else {
+        throw new Error(response.message || 'Error al crear el pedido');
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || 'Error al crear el pedido';
+      console.error('❌ [useOrders] Error creating order:', {
+        message: errorMessage,
+        status: err.response?.status,
+        data: err.response?.data
+      });
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchOrders]);
+
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
@@ -79,6 +147,7 @@ export const useOrders = (initialFilters = {}) => {
     error,
     filters,
     setFilters,
-    refreshOrders: fetchOrders
+    refreshOrders: fetchOrders,
+    createOrder
   };
 };

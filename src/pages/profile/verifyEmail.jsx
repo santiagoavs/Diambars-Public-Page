@@ -40,6 +40,19 @@ export default function VerifyEmailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Agregar/quitar clase al body para controlar el scroll
+  useEffect(() => {
+    // Agregar clase al body y html cuando se monte el componente
+    document.body.classList.add('verify-email-page');
+    document.documentElement.classList.add('verify-email-page');
+
+    // Cleanup: quitar la clase cuando se desmonte el componente
+    return () => {
+      document.body.classList.remove('verify-email-page');
+      document.documentElement.classList.remove('verify-email-page');
+    };
+  }, []);
+
   const handleResendEmail = async () => {
     console.log('[VerifyEmailPage] Reenvío manual solicitado');
     console.log('[VerifyEmailPage] Email:', email);

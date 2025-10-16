@@ -55,6 +55,19 @@ export const ordersAPI = {
     }
   },
 
+  // Crear orden (nuevo flujo con payment methods y addresses)
+  createOrder: async (orderData) => {
+    console.log('📦 [ordersApi] Creating order:', orderData);
+    try {
+      const response = await apiClient.post('orders', orderData);
+      console.log('✅ [ordersApi] Order created successfully:', response.data);
+      return response;
+    } catch (error) {
+      console.error('❌ [ordersApi] Error creating order:', error);
+      throw error;
+    }
+  },
+
   // Responder a cotización
   respondToQuote: async (orderId, response) => {
     return await apiClient.post(`orders/${orderId}/respond-quote`, response);

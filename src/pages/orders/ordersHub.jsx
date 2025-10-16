@@ -18,7 +18,8 @@ const OrdersHub = () => {
     orders = [], 
     loading, 
     error, 
-    refreshOrders 
+    refreshOrders,
+    createOrder
   } = useOrders();
   
   // Add a retry function
@@ -132,63 +133,79 @@ const OrdersHub = () => {
   };
 
   const handleOrderComplete = async (formData) => {
-    console.log('📦 [OrdersHub] Completing order with data:', formData);
-    console.log('📦 [OrdersHub] Selected design:', selectedDesign);
-    
     try {
+      // Show loading
+      Swal.fire({
+        title: 'Procesando Pedido...',
+        html: formData.paymentMethod === 'online' ? 
+          'Procesando pago y creando pedido...' : 
+          'Creando pedido...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
       // Validate that we have a selected design
       if (!selectedDesign) {
         throw new Error('No hay un diseño seleccionado');
       }
 
-      // Get the design ID (try both _id and id)
+      // Get the design ID
       const designId = selectedDesign._id || selectedDesign.id;
       
       if (!designId) {
-        console.error('❌ [OrdersHub] Design object:', selectedDesign);
         throw new Error('El diseño seleccionado no tiene un ID válido');
       }
 
-      // Prepare order data for API
+      // Prepare order data
+      console.log('📋 [OrdersHub] Form data received:', {
+        deliveryType: formData.deliveryType,
+        paymentMethod: formData.paymentMethod,
+        hasShippingAddress: !!formData.shippingAddress,
+        hasSelectedCard: !!formData.selectedCard,
+        selectedCard: formData.selectedCard,
+        hasCvc: !!formData.cvc,
+        cvcLength: formData.cvc?.length
+      });
+      
       const orderData = {
         designId: designId,
         deliveryType: formData.deliveryType,
-        paymentMethod: formData.paymentMethod
+        paymentMethod: formData.paymentMethod,
+        shippingAddress: formData.shippingAddress,
+        selectedCard: formData.selectedCard,
+        cvc: formData.cvc,
+        notes: formData.notes || '',
+        quantity: 1
       };
 
-      // Only add deliveryAddress if it exists and deliveryType is 'delivery'
-      if (formData.deliveryType === 'delivery' && formData.shippingAddress) {
-        orderData.deliveryAddress = formData.shippingAddress;
-      }
+      console.log('📋 [OrdersHub] Prepared order data:', orderData);
 
-      // Only add notes if they exist and are not empty
-      if (formData.notes && formData.notes.trim()) {
-        orderData.notes = formData.notes.trim();
-      }
+      // Create order using the hook
+      const createdOrder = await createOrder(orderData);
 
-      console.log('📤 [OrdersHub] Sending order data:', orderData);
-
-      // Call API to create order from approved design
-      const response = await ordersAPI.createOrderFromApprovedDesign(orderData);
-
-      if (response.success) {
-        // Close the modal first
-        setShowCompleteOrderModal(false);
-        setSelectedDesign(null);
-        
-        // Refresh data
-        await refreshOrders();
-        await refreshDesigns();
-        
-        // Show success message after refresh
-        await Swal.fire({
-          icon: 'success',
-          title: '¡Pedido Creado!',
-          text: `Tu pedido ${response.data.order.orderNumber} ha sido creado exitosamente.`,
-          confirmButtonText: 'Entendido',
-          confirmButtonColor: '#10B981'
-        });
-      }
+      // Close the modal
+      setShowCompleteOrderModal(false);
+      setSelectedDesign(null);
+      
+      // Refresh designs
+      await refreshDesigns();
+      
+      // Show success message
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Pedido Creado!',
+        html: `
+          <p>Tu pedido <strong>${createdOrder.orderNumber}</strong> ha sido creado exitosamente.</p>
+          ${formData.paymentMethod === 'online' ? '<p class="text-green-600">✓ Pago procesado correctamente</p>' : ''}
+        `,
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#3F2724',
+        timer: 5000,
+        timerProgressBar: true
+      });
+      
     } catch (error) {
       console.error('❌ [OrdersHub] Error completing order:', error);
       
@@ -247,7 +264,7 @@ const OrdersHub = () => {
               onClick={() => window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`}
               className="create-order-btn"
             >
-              Iniciar Sesión
+              Iniciar sesión
             </button>
           </div>
         </div>
@@ -262,7 +279,7 @@ const OrdersHub = () => {
         {/* Header */}
         <div className="orders-hub-header">
           <div className="hub-title">
-            <h1>Mis Pedidos</h1>
+            <h1>Mis pedidos</h1>
             <p>Gestiona y sigue el estado de todos tus pedidos</p>
           </div>
           
@@ -284,7 +301,7 @@ const OrdersHub = () => {
           <div className="approved-designs-alert">
             <div className="alert-icon">⚠️</div>
             <div className="alert-content">
-              <h4>Diseños Aprobados Pendientes</h4>
+              <h4>Diseños aprobados pendientes</h4>
               <p>
                 Tienes {approvedDesigns.length} diseño{approvedDesigns.length > 1 ? 's' : ''} aprobado{approvedDesigns.length > 1 ? 's' : ''} que necesita{approvedDesigns.length > 1 ? 'n' : ''} información adicional para crear el pedido.
               </p>
@@ -296,7 +313,7 @@ const OrdersHub = () => {
                       onClick={() => handleCompleteOrder(design)}
                       className="btn-complete-info"
                     >
-                      Completar Información
+                      Completar información
                     </button>
                   </div>
                 ))}
@@ -308,7 +325,7 @@ const OrdersHub = () => {
         {/* Estadísticas */}
         <div className="stats-grid-orders">
           <StatsCard
-            title="Total de Pedidos"
+            title="Total de pedidos"
             value={stats.total}
             color="#1F64BF"
             onClick={() => setActiveTab('all')}
@@ -488,7 +505,7 @@ const OrderCard = ({ order, onView, onRespondQuote, onApproveQuality }) => (
         onClick={() => onView(order)}
         className="btn btn-view"
       >
-        Ver Detalles
+        Ver detalles
       </button>
 
       {order.needsResponse && (
@@ -505,7 +522,7 @@ const OrderCard = ({ order, onView, onRespondQuote, onApproveQuality }) => (
           onClick={() => onApproveQuality(order)}
           className="btn btn-quality"
         >
-          Aprobar Calidad
+          Aprobar calidad
         </button>
       )}
     </div>
