@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useAddresses } from '../../hooks/useAddresses';
 import { useAddressValidation } from '../../hooks/useAddressValidation';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import AddressMapPicker from './AddressMapPicker';
 import AddressMapViewer from './AddressMapViewer';
 import './shippingAddresses.css';
-import Modal from '../UI/modal/modal';
 import Swal from 'sweetalert2';
+import { X } from 'lucide-react';
 import { 
   MapPin, 
   ArrowClockwise, 
@@ -50,69 +51,17 @@ const ShippingAddresses = () => {
     getElSalvadorCenter 
   } = useGeolocation();
 
-  // Configuración de SweetAlert2 muy redondeada
-  const showAlert = (type, title, text, showConfirmButton = true) => {
-    const config = {
+  // Helper function for consistent SweetAlert styling (matching designHub.jsx)
+  const showAlert = (type, title, text) => {
+    return Swal.fire({
+      icon: type,
       title,
       text,
-      showConfirmButton,
       confirmButtonText: 'Entendido',
       confirmButtonColor: '#3F2724',
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdrop: 'rgba(0, 0, 0, 0.4)',
-      customClass: {
-        popup: 'swal2-popup-rounded',
-        confirmButton: 'swal2-confirm-button-rounded'
-      },
-      buttonsStyling: false,
-      allowOutsideClick: false,
-      allowEscapeKey: false,
       timer: type === 'success' ? 3000 : undefined,
-      timerProgressBar: type === 'success',
-      // Asegurar z-index muy alto para que aparezca sobre modales
-      zIndex: 10000000
-    };
-
-    switch (type) {
-      case 'success':
-        return Swal.fire({
-          ...config,
-          icon: 'success',
-          iconColor: '#28a745'
-        });
-      case 'error':
-        return Swal.fire({
-          ...config,
-          icon: 'error',
-          iconColor: '#dc3545'
-        });
-      case 'warning':
-        return Swal.fire({
-          ...config,
-          icon: 'warning',
-          iconColor: '#ffc107'
-        });
-      case 'info':
-        return Swal.fire({
-          ...config,
-          icon: 'info',
-          iconColor: '#17a2b8'
-        });
-      case 'loading':
-        return Swal.fire({
-          ...config,
-          title: 'Procesando...',
-          text: 'Por favor espera',
-          icon: 'info',
-          showConfirmButton: false,
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-      default:
-        return Swal.fire(config);
-    }
+      timerProgressBar: type === 'success'
+    });
   };
 
   // Debug logs para verificar datos (simplificado)
@@ -177,6 +126,21 @@ const ShippingAddresses = () => {
       };
     }
   }, [isMapViewerOpen]);
+
+  // Block body scroll when any modal is open
+  useEffect(() => {
+    if (isAddModalOpen || editingAddress || isMapViewerOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAddModalOpen, editingAddress, isMapViewerOpen]);
+
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [mapPickerCoordinates, setMapPickerCoordinates] = useState(null);
   const [isValidatingAddress, setIsValidatingAddress] = useState(false);
@@ -669,24 +633,12 @@ const ShippingAddresses = () => {
       <div className="address-header">
         <h3 className="address-title">Tus direcciones</h3>
         <div className="header-buttons">
-          {addresses.length > 0 && (
-            <button 
-              className="address-button map"
-              onClick={handleViewAllAddressesOnMap}
-              disabled={isSubmitting}
-              title="Ver en mapa"
-            >
-              <MapPin size={16} />
-              Mapa
-            </button>
-          )}
           <button 
             className="address-button edit"
             onClick={loadAddresses}
             disabled={isSubmitting}
             title="Recargar direcciones"
           >
-            <ArrowClockwise size={16} />
             Recargar
           </button>
           <button 
@@ -698,7 +650,6 @@ const ShippingAddresses = () => {
             disabled={isSubmitting}
             title="Agregar nueva dirección"
           >
-            <Plus size={16} />
             Añadir
           </button>
         </div>
@@ -755,7 +706,7 @@ const ShippingAddresses = () => {
                   aria-label="Ver en mapa"
                   title="Ver ubicación en mapa"
                 >
-                  <Eye size={16} />
+                  <Eye size={19} />
                 </button>
                 
                 <button
@@ -765,7 +716,7 @@ const ShippingAddresses = () => {
                   aria-label="Editar"
                   title="Editar dirección"
                 >
-                  <PencilSimple size={16} />
+                  <PencilSimple size={19} />
                 </button>
               </div>
             </div>
@@ -773,154 +724,35 @@ const ShippingAddresses = () => {
         )}
       </div>
 
-      {/* Modal para añadir/editar */}
-      <Modal 
-        isOpen={isAddModalOpen || !!editingAddress} 
-        onClose={handleCloseModals}
-        className="address-modal"
-      >
-        <h3 className="modal-title">
-          {editingAddress ? 'Editar dirección' : 'Añadir dirección'}
-        </h3>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="address-modal-content">
-          <div className="form-section">
-            <div className="form-group">
-              <label className="form-label">
-                Etiqueta (opcional)
-              </label>
-              <input
-                type="text"
-                placeholder="Casa, Trabajo, etc."
-                value={formData.label}
-                onChange={(e) => handleInputChange('label', e.target.value)}
-                className="form-input"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                Nombre del destinatario *
-              </label>
-              <input
-                type="text"
-                placeholder="Nombre completo"
-                value={formData.recipient}
-                onChange={(e) => handleInputChange('recipient', e.target.value)}
-                className={`form-input ${formErrors.recipient ? 'input-error' : ''}`}
-              />
-              {formErrors.recipient && (
-                <small className="error-message">{formErrors.recipient}</small>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                Teléfono *
-              </label>
-              <input
-                type="tel"
-                placeholder="7123-4567"
-                value={formData.phoneNumber}
-                onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                className={`form-input ${formErrors.phoneNumber ? 'input-error' : ''}`}
-              />
-              {formErrors.phoneNumber && (
-                <small className="error-message">{formErrors.phoneNumber}</small>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                Departamento *
-              </label>
-              <select
-                value={formData.department}
-                onChange={(e) => handleInputChange('department', e.target.value)}
-                className={`form-select ${formErrors.department ? 'input-error' : ''}`}
-              >
-                <option value="">Selecciona un departamento</option>
-                {locationData.departments?.map((dept) => (
-                  <option key={dept.name} value={dept.name}>
-                    {dept.name} (Envío: ${dept.deliveryFee?.toFixed(2) || '0.00'})
-                  </option>
-                ))}
-              </select>
-              {formErrors.department && (
-                <small className="error-message">{formErrors.department}</small>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                Municipio *
-              </label>
-              <select
-                value={formData.municipality}
-                onChange={(e) => handleInputChange('municipality', e.target.value)}
-                disabled={!formData.department}
-                className={`form-select ${formErrors.municipality ? 'input-error' : ''} ${!formData.department ? 'disabled-select' : ''}`}
-              >
-                <option value="">
-                  {formData.department ? 'Selecciona un municipio' : 'Primero selecciona un departamento'}
-                </option>
-                {formData.department && getMunicipalitiesForDepartment(formData.department).map((municipality) => (
-                  <option key={municipality} value={municipality}>
-                    {municipality}
-                  </option>
-                ))}
-              </select>
-              {formErrors.municipality && (
-                <small className="error-message">{formErrors.municipality}</small>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                Dirección completa *
-              </label>
-              <input
-                type="text"
-                placeholder="Ej: Colonia Centro, Calle Principal #123"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                className={`form-input ${formErrors.address ? 'input-error' : ''}`}
-              />
-              {formErrors.address && (
-                <small className="error-message">{formErrors.address}</small>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">
-                Detalles adicionales (opcional)
-              </label>
-              <input
-                type="text"
-                placeholder="Referencias, número de casa, etc."
-                value={formData.additionalDetails}
-                onChange={(e) => handleInputChange('additionalDetails', e.target.value)}
-                className={`form-input ${formErrors.additionalDetails ? 'input-error' : ''}`}
-              />
-              {formErrors.additionalDetails && (
-                <small className="error-message">{formErrors.additionalDetails}</small>
-              )}
-            </div>
+      {/* Modal para añadir/editar - Standalone modal matching designViewerModal structure */}
+      {(isAddModalOpen || !!editingAddress) && createPortal(
+        <div className="dialog-overlay-viewer" onClick={handleCloseModals}>
+          <div className="dialog-content-viewer" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="dialog-header-viewer">
+          <div className="dialog-header-content-viewer">
+            <h2 className="dialog-title-viewer">
+              {editingAddress ? 'Editar dirección' : 'Añadir dirección'}
+            </h2>
+            <button className="dialog-close-btn-viewer" onClick={handleCloseModals} type="button">
+              <X size={20} />
+              <span className="sr-only-viewer">Cerrar</span>
+            </button>
           </div>
+        </div>
 
-          <div className="map-section">
-            <h4>Ubicación en el mapa</h4>
-            
-
-            {/* Mapa siempre visible */}
-            <div className="map-picker-container">
+        {/* Body */}
+        <div className="dialog-body-viewer">
+          {/* Map Section - Top like canvas in designViewerModal */}
+          <div className="section-viewer">
+            <h3 className="section-title-viewer">Ubicación en el mapa</h3>
+            <div className="map-picker-container-viewer">
               <AddressMapPicker
                 center={mapPickerCoordinates || getElSalvadorCenter()}
                 zoom={13}
                 onLocationSelect={handleLocationFromMap}
                 selectedLocation={mapPickerCoordinates}
-                height="450px"
+                height="400px"
                 onAddressDataChange={handleAddressDataChange}
                 enableAutoFormPopulation={true}
                 onClearFields={handleClearCoordinates}
@@ -928,88 +760,224 @@ const ShippingAddresses = () => {
               />
             </div>
           </div>
+
+          {/* Form Section - Below map */}
+          <div className="section-viewer">
+            <h3 className="section-title-viewer">Información de la dirección</h3>
+            <form onSubmit={handleSubmit} id="address-form">
+              <div className="form-grid-viewer">
+                <div className="form-group">
+                  <label className="form-label-viewer">
+                    Etiqueta (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Casa, Trabajo, etc."
+                    value={formData.label}
+                    onChange={(e) => handleInputChange('label', e.target.value)}
+                    className="form-input-viewer"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label-viewer">
+                    Nombre del destinatario *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nombre completo"
+                    value={formData.recipient}
+                    onChange={(e) => handleInputChange('recipient', e.target.value)}
+                    className={`form-input-viewer ${formErrors.recipient ? 'input-error' : ''}`}
+                  />
+                  {formErrors.recipient && (
+                    <small className="error-message">{formErrors.recipient}</small>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label-viewer">
+                    Teléfono *
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="7123-4567"
+                    value={formData.phoneNumber}
+                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    className={`form-input-viewer ${formErrors.phoneNumber ? 'input-error' : ''}`}
+                  />
+                  {formErrors.phoneNumber && (
+                    <small className="error-message">{formErrors.phoneNumber}</small>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label-viewer">
+                    Departamento *
+                  </label>
+                  <select
+                    value={formData.department}
+                    onChange={(e) => handleInputChange('department', e.target.value)}
+                    className={`form-select-viewer ${formErrors.department ? 'input-error' : ''}`}
+                  >
+                    <option value="">Selecciona un departamento</option>
+                    {locationData.departments?.map((dept) => (
+                      <option key={dept.name} value={dept.name}>
+                        {dept.name} (Envío: ${dept.deliveryFee?.toFixed(2) || '0.00'})
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.department && (
+                    <small className="error-message">{formErrors.department}</small>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label-viewer">
+                    Municipio *
+                  </label>
+                  <select
+                    value={formData.municipality}
+                    onChange={(e) => handleInputChange('municipality', e.target.value)}
+                    disabled={!formData.department}
+                    className={`form-select-viewer ${formErrors.municipality ? 'input-error' : ''} ${!formData.department ? 'disabled-select' : ''}`}
+                  >
+                    <option value="">
+                      {formData.department ? 'Selecciona un municipio' : 'Primero selecciona un departamento'}
+                    </option>
+                    {formData.department && getMunicipalitiesForDepartment(formData.department).map((municipality) => (
+                      <option key={municipality} value={municipality}>
+                        {municipality}
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.municipality && (
+                    <small className="error-message">{formErrors.municipality}</small>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label-viewer">
+                    Dirección completa *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Colonia Centro, Calle Principal #123"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    className={`form-input-viewer ${formErrors.address ? 'input-error' : ''}`}
+                  />
+                  {formErrors.address && (
+                    <small className="error-message">{formErrors.address}</small>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label-viewer">
+                    Detalles adicionales (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Referencias, número de casa, etc."
+                    value={formData.additionalDetails}
+                    onChange={(e) => handleInputChange('additionalDetails', e.target.value)}
+                    className={`form-input-viewer ${formErrors.additionalDetails ? 'input-error' : ''}`}
+                  />
+                  {formErrors.additionalDetails && (
+                    <small className="error-message">{formErrors.additionalDetails}</small>
+                  )}
+                </div>
+
+                <div className="form-group checkbox-group-viewer">
+                  <label className="checkbox-label-viewer">
+                    <input 
+                      type="checkbox"
+                      className="checkbox-input-viewer"
+                      checked={formData.isDefault}
+                      onChange={(e) => handleInputChange('isDefault', e.target.checked)}
+                    />
+                    Establecer como dirección predeterminada
+                  </label>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <div className="checkbox-group">
-          <label className="checkbox-label">
-            <input 
-              type="checkbox"
-              className="checkbox-input"
-              checked={formData.isDefault}
-              onChange={(e) => handleInputChange('isDefault', e.target.checked)}
-            />
-            Establecer como dirección predeterminada
-          </label>
-        </div>
-
-          <div className="modal-buttons">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="submit-button"
-            >
-              {isSubmitting ? 'Guardando...' : 'Guardar'}
-            </button>
-          
-          {editingAddress && (
-            <button
-              type="button"
-              onClick={() => handleDeleteFromModal(editingAddress._id)}
-              disabled={isSubmitting}
-              className="cancel-button"
-            >
-              Eliminar
-            </button>
-          )}
-          
-          {/* Solo mostrar el botón Cancelar cuando NO se esté editando */}
-          {!editingAddress && (
+        {/* Footer */}
+        <div className="dialog-footer-viewer">
+          <div className="footer-actions-viewer">
             <button
               type="button"
               onClick={handleCloseModals}
               disabled={isSubmitting}
-              className="cancel-button"
+              className="btn-secondary-viewer"
             >
               Cancelar
             </button>
-          )}
+            {editingAddress && (
+              <button
+                type="button"
+                onClick={() => handleDeleteFromModal(editingAddress._id)}
+                disabled={isSubmitting}
+                className="btn-delete-viewer"
+              >
+                <Trash className="icon-sm-viewer" />
+                Eliminar
+              </button>
+            )}
+            <button
+              type="submit"
+              form="address-form"
+              disabled={isSubmitting}
+              className="btn-primary-address"
+            >
+              <CheckCircle className="icon-sm-viewer" />
+              {isSubmitting ? 'Guardando...' : 'Guardar dirección'}
+            </button>
           </div>
-        </form>
-      </Modal>
+        </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
-      {/* Modal para visor de mapa */}
-      <Modal 
-        isOpen={isMapViewerOpen} 
-        onClose={handleCloseMapViewer}
-        className="map-viewer-modal"
-      >
-        <div className="map-viewer-header">
-          <h3 className="modal-title">
-            {selectedAddressForMap ? 
-              `Ubicación: ${selectedAddressForMap.label || 'Mi dirección'}` : 
-              'Todas tus direcciones'
-            }
-          </h3>
-          <button 
-            className="close-button"
-            onClick={handleCloseMapViewer}
-          >
-            <XCircle size={20} />
-          </button>
-        </div>
-        
-        <div className="map-viewer-content">
-          <AddressMapViewer
-            addresses={addresses || []}
-            selectedAddress={selectedAddressForMap}
-            onAddressSelect={setSelectedAddressForMap}
-            height="500px"
-            showControls={true}
-            clusterMarkers={true}
-            showSidebar={addresses.length > 1}
-          />
-        </div>
-      </Modal>
+      {/* Modal para visor de mapa - Standalone modal */}
+      {isMapViewerOpen && createPortal(
+        <div className="dialog-overlay-viewer" onClick={handleCloseMapViewer}>
+          <div className="dialog-content-viewer-map" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="dialog-header-viewer">
+              <div className="dialog-header-content-viewer">
+                <h2 className="dialog-title-viewer">
+                  {selectedAddressForMap ? 
+                    `Ubicación: ${selectedAddressForMap.label || 'Mi dirección'}` : 
+                    'Todas tus direcciones'
+                  }
+                </h2>
+                <button className="dialog-close-btn-viewer" onClick={handleCloseMapViewer} type="button">
+                  <X size={20} />
+                  <span className="sr-only-viewer">Cerrar</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="dialog-body-viewer-map">
+              <AddressMapViewer
+                addresses={addresses || []}
+                selectedAddress={selectedAddressForMap}
+                onAddressSelect={setSelectedAddressForMap}
+                height="500px"
+                showControls={true}
+                clusterMarkers={true}
+                showSidebar={addresses.length > 1}
+              />
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

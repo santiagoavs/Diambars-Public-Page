@@ -616,7 +616,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 } */
 
-.btn {
+/* .btn {
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
@@ -629,7 +629,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
+} */
 
 .btn-view {
   background: rgba(59, 130, 246, 0.1);

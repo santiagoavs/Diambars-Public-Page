@@ -81,11 +81,23 @@ const AddressMapViewer = ({
   showSidebar = false
 }) => {
   const [mapReady, setMapReady] = useState(false);
-  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [selectedAddressId, setSelectedAddressId] = useState(selectedAddress?._id || null);
   const [showInactiveAddresses, setShowInactiveAddresses] = useState(true);
   const [showDefaultOnly, setShowDefaultOnly] = useState(false);
-  
   const mapRef = useRef(null);
+
+  // Debug: Log all addresses and their coordinates
+  useEffect(() => {
+    console.log('🗺️ [AddressMapViewer] Received addresses:', addresses.length);
+    addresses.forEach((addr, index) => {
+      console.log(`  ${index + 1}. ${addr.label || 'Sin etiqueta'}:`, {
+        id: addr._id,
+        coordinates: addr.location?.coordinates,
+        isDefault: addr.isDefault,
+        fullAddress: addr.fullAddress
+      });
+    });
+  }, [addresses]);
 
   // Validar que las direcciones sean un array válido
   const validAddresses = Array.isArray(addresses) ? addresses : [];
@@ -161,7 +173,7 @@ const AddressMapViewer = ({
   return (
     <div className="address-map-viewer">
       {showControls && (
-        <div className="map-controls">
+        <div className="map-controls-viewer">
           <div className="control-group">
             <label className="control-label">
               <input
@@ -252,6 +264,8 @@ const AddressMapViewer = ({
                 return null;
               }
               
+              // MongoDB stores as [longitude, latitude] (GeoJSON format)
+              // Leaflet expects [latitude, longitude]
               const [lng, lat] = coordinates;
               if (typeof lng !== 'number' || typeof lat !== 'number' || 
                   isNaN(lng) || isNaN(lat) || !isFinite(lng) || !isFinite(lat)) {
@@ -261,10 +275,15 @@ const AddressMapViewer = ({
               const isDefault = address.isDefault;
               const isSelected = selectedAddressId === address._id;
               
+              console.log(`📍 [AddressMapViewer] Rendering marker for ${address.label}:`, {
+                stored: coordinates,
+                leafletPosition: [lat, lng]
+              });
+              
               return (
                 <Marker
                   key={address._id}
-                  position={[lat, lng]}
+                  position={[lat, lng]}  // Correct: [latitude, longitude] for Leaflet
                   icon={createCustomIcon(isSelected ? '#f093fb' : (isDefault ? '#667eea' : '#94a3b8'), isDefault)}
                   eventHandlers={{
                     click: () => handleMarkerClick(address)

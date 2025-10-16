@@ -6,12 +6,10 @@ export const paymentMethodsService = {
     try {
       console.log('🔍 [paymentMethodsService] Obteniendo métodos de pago del usuario');
       
-      // TODO: Implementar endpoint en el backend
-      // const response = await apiClient.get('/user/payment-methods');
+      const response = await apiClient.get('/user/payment-methods');
       
-      // Retornar array vacío temporalmente
-      console.log('⚠️ [paymentMethodsService] Endpoint no implementado, retornando array vacío');
-      return [];
+      console.log('✅ [paymentMethodsService] Métodos obtenidos:', response);
+      return response.paymentMethods || response.data || [];
     } catch (error) {
       console.error('❌ [paymentMethodsService] Error obteniendo métodos:', error);
       return [];
