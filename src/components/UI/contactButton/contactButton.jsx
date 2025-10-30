@@ -3,11 +3,11 @@ import './contactButton.css';
 export default function ContactButton() {
   return (
     <a
-      href="https://wa.me/70164304" // Reemplaza con tu número
+      href="https://wa.me/78368550"
       className="contact-button"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Chatear por WhatsApp"
+      aria-label="Contactar por WhatsApp"
     >
       {/* Ícono oficial de WhatsApp */}
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#53ab38" className="bi bi-whatsapp" viewBox="0 0 16 16">
