@@ -92,7 +92,7 @@ const Footer = () => {
               <FontAwesomeIcon icon={faInstagram} />
             </a>
             <a 
-              href="https://github.com/santiagoavs/expo2025/graphs/contributors" 
+              // href="https://github.com/santiagoavs/expo2025/graphs/contributors" 
               target="_blank" 
               rel="noopener noreferrer"
               title="GitHub"
