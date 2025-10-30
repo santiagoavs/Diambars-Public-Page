@@ -44,7 +44,7 @@ const Footer = () => {
             </div>
             <div className="contact-item">
               <span className="contact-label-footer">Dirección:</span>
-              <span>Avenida Aguilares 218 San Salvador CP, San Salvador 1101</span>
+              <span>San Salvador, Ayutuxtepeque</span>
             </div>
           </div>
         </div>
