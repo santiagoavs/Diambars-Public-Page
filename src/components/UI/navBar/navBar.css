@@ -228,10 +228,6 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: radial-gradient(
-      circle at center,
-      rgba(255, 255, 255, 0.1)
-    );
     z-index: -1;
     filter: blur(6px);
     opacity: 0.1;
@@ -268,6 +264,7 @@
     height: 100%;
     z-index: 999;
     padding: 1rem;
+    background: rgba(255, 255, 255, 0.35);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     box-shadow: 
@@ -277,14 +274,13 @@
     }
 
     .sidebar::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: -1;
-        background: linear-gradient(135deg, #fff6e20d, #fff6e259);
-        transform: translateX(10px) scale(0.95);
-        filter: blur(17px);
-        opacity: 0.8;
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    transform: translateX(10px) scale(0.95);
+    filter: blur(17px);
+    opacity: 0.8;
     }
 
     .sidebar-item span {
@@ -314,7 +310,7 @@
         align-items: center;
         justify-content: center;
         transition: all 0.3s ease;
-        background: rgba(255, 246, 226, 0.25);
+        background: transparent;
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.4);
@@ -328,10 +324,6 @@
         position: absolute;
         inset: 0;
         border-radius: 50%;
-        background: radial-gradient(
-        circle at center,
-        rgba(245, 231, 198, 0.3)
-        );
         z-index: -1;
         filter: blur(6px);
         opacity: 0.8;

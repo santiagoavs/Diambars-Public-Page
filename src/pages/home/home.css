@@ -810,6 +810,8 @@
   position: relative;
   width: 400px;
   height: 500px;
+  justify-self: center;
+  align-self: center;
 }
 
 .tshirt-base {
@@ -1469,7 +1471,7 @@
   
   .tshirt-template {
     max-width: 400px;
-    height: 300px;
+    height: 400px;
     order: 1;
   }
   
@@ -1516,10 +1518,6 @@
     text-align: center;
     align-self: flex-end;
     gap: 1rem;
-  }
-
-  .left-text {
-    margin-top: 120px;
   }
 } 
 
@@ -1629,7 +1627,7 @@
   
   .tshirt-template {
     max-width: 320px;
-    height: 250px;
+    height: 320px;
   }
 
   .design-image {
@@ -1718,7 +1716,7 @@
   
   .tshirt-template {
     max-width: 280px;
-    height: 220px;
+    height: 270px;
   }
   
   .custom-text-item {
